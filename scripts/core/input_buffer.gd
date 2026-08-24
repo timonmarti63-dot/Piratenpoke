@@ -22,15 +22,15 @@ var _buffered: Vector2i = DIR_NONE
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("move_up"):
-		_set(DIR_UP)
+		_set_dir(DIR_UP)
 	elif event.is_action_pressed("move_down"):
-		_set(DIR_DOWN)
+		_set_dir(DIR_DOWN)
 	elif event.is_action_pressed("move_left"):
-		_set(DIR_LEFT)
+		_set_dir(DIR_LEFT)
 	elif event.is_action_pressed("move_right"):
-		_set(DIR_RIGHT)
+		_set_dir(DIR_RIGHT)
 
-func _set(dir: Vector2i) -> void:
+func _set_dir(dir: Vector2i) -> void:
 	_buffered = dir
 	direction_changed.emit(dir)
 
