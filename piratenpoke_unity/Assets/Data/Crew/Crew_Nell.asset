@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_Script: {fileID: 11500000, guid: f695113cb29ca09fda32dbfa75a74734, type: 3}
+  m_Name: Crew_Nell
+  displayName: "Nell die Navigatorin"
+  element: 0
+  placeholderColor: {r: 0.9, g: 0.85, b: 0.6, a: 1}
+  maxHp: 45
+  baseAttack: 11
+  baseDefense: 7
+  speed: 12
+  skills:
+    - {fileID: 11400000, guid: bd6571c460a2d21a625c7ad892ec8830, type: 2}
+    - {fileID: 11400000, guid: 3167247e66b87298c07875f5998e8169, type: 2}
+  level: 3
+  xp: 0

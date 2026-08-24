@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0fc1b474566b2486d2a80756bc772fd7, type: 3}
+  m_Name: Skill_EmberSlash
+  m_EditorClassIdentifier:
+  displayName: "Glut-Klinge"
+  description: ""
+  element: 1
+  target: 0
+  power: 18
+  heal: 0
+  accuracy: 0.95
+  cooldown: 0

@@ -1,8 +1,9 @@
-[gd_resource type="Resource" script_class="EnemyData" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="EnemyData" load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1"]
 [ext_resource type="Resource" path="res://data/skills/tide_shot.tres" id="2"]
 [ext_resource type="Resource" path="res://data/skills/venom_dart.tres" id="3"]
+[ext_resource type="Texture2D" path="res://assets/sprites/kelpholm_captain.png" id="4"]
 
 [resource]
 script = ExtResource("1")
@@ -13,6 +14,7 @@ base_attack = 14
 base_defense = 9
 speed = 10
 skills = [ExtResource("2"), ExtResource("3")]
+portrait = ExtResource("4")
 xp_reward = 60
 gold_reward = 80
 ai_profile = &"aggressive"

@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_Script: {fileID: 11500000, guid: 964705fc0c4c555773ca29b9dd346e88, type: 3}
+  m_Name: Item_SmallPotion
+  displayName: "Kleiner Trank"
+  description: ""
+  category: 0
+  buyPrice: 15
+  sellPrice: 7
+  healAmount: 20
+  curesPoison: 0
+  attackBonus: 0
+  defenseBonus: 0
+  speedBonus: 0
+  elementBonus: 0

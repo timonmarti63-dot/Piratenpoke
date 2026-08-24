@@ -26,15 +26,25 @@ func _ready() -> void:
 		encounter_cell.x * GameConfig.TILE_SIZE + GameConfig.TILE_SIZE / 2.0,
 		encounter_cell.y * GameConfig.TILE_SIZE + GameConfig.TILE_SIZE / 2.0
 	)
-	var marker := ColorRect.new()
-	var s: int = GameConfig.TILE_SIZE - 16
-	marker.size = Vector2(s, s)
-	marker.position = Vector2(-s / 2.0, -s / 2.0)
-	marker.color = Color(0.85, 0.2, 0.2, 1.0)
-	add_child(marker)
+	_build_marker()
 
 	set_process(true)
 	SceneRouter.battle_finished.connect(_on_battle_finished)
+
+func _build_marker() -> void:
+	if enemy_data != null and enemy_data.portrait != null:
+		var spr := Sprite2D.new()
+		spr.texture = enemy_data.portrait
+		spr.centered = true
+		spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		add_child(spr)
+	else:
+		var marker := ColorRect.new()
+		var s: int = GameConfig.TILE_SIZE - 16
+		marker.size = Vector2(s, s)
+		marker.position = Vector2(-s / 2.0, -s / 2.0)
+		marker.color = Color(0.85, 0.2, 0.2, 1.0)
+		add_child(marker)
 
 func _process(_delta: float) -> void:
 	if _defeated or _player == null or enemy_data == null:

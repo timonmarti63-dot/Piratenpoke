@@ -1,9 +1,10 @@
-[gd_resource type="Resource" script_class="CrewMember" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="CrewMember" load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/crew_member.gd" id="1"]
 [ext_resource type="Resource" path="res://data/skills/ember_slash.tres" id="2"]
 [ext_resource type="Resource" path="res://data/skills/quick_bandage.tres" id="3"]
 [ext_resource type="Resource" path="res://data/skills/gale_gust.tres" id="4"]
+[ext_resource type="Texture2D" path="res://assets/sprites/captain.png" id="5"]
 
 [resource]
 script = ExtResource("1")
@@ -14,5 +15,6 @@ base_attack = 14
 base_defense = 8
 speed = 10
 skills = [ExtResource("2"), ExtResource("3"), ExtResource("4")]
+portrait = ExtResource("5")
 level = 3
 xp = 0

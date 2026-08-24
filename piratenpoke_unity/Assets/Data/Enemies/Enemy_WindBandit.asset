@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_Script: {fileID: 11500000, guid: a6fb960f89dc4de5d62b9ba10a0b1ca2, type: 3}
+  m_Name: Enemy_WindBandit
+  displayName: "Wind-Bandit"
+  element: 4
+  placeholderColor: {r: 0.3, g: 0.3, b: 0.35, a: 1}
+  maxHp: 36
+  baseAttack: 10
+  baseDefense: 5
+  speed: 9
+  skills:
+    - {fileID: 11400000, guid: bd6571c460a2d21a625c7ad892ec8830, type: 2}
+    - {fileID: 11400000, guid: 629772c016cf492b8a2de7bec8e89ee9, type: 2}
+  xpReward: 20
+  goldReward: 12
+  aiProfile: 0
+  isBoss: 0
+  troopLeaderId: 

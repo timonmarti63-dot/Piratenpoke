@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_Script: {fileID: 11500000, guid: a6fb960f89dc4de5d62b9ba10a0b1ca2, type: 3}
+  m_Name: Enemy_KelpholmCaptain
+  displayName: "Piraten-Kapitaen von Kelpholm"
+  element: 2
+  placeholderColor: {r: 0.15, g: 0.15, b: 0.2, a: 1}
+  maxHp: 70
+  baseAttack: 14
+  baseDefense: 9
+  speed: 10
+  skills:
+    - {fileID: 11400000, guid: 97025607d57b312e18df8000387c0b9a, type: 2}
+    - {fileID: 11400000, guid: 629772c016cf492b8a2de7bec8e89ee9, type: 2}
+  xpReward: 60
+  goldReward: 80
+  aiProfile: 0
+  isBoss: 1
+  troopLeaderId: kelpholm_captain
