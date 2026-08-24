@@ -34,8 +34,9 @@ namespace Piratenpoke.Utils
         private void Start()
         {
             // Boot-Scene ist nur der Autoload-Punkt -- danach in die Testinsel wechseln.
+            // Sprint 3: Startpunkt ist die Ozean-Scene mit dem Schiff.
             if (SceneManager.GetActiveScene().name == "Boot")
-                SceneManager.LoadScene(SceneRouter.OverworldTestScene);
+                SceneManager.LoadScene(SceneRouter.OceanScene);
         }
     }
 }

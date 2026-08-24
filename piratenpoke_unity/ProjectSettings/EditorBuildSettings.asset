@@ -17,4 +17,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/BattleArena.unity
     guid: b14be96cddd398d5a3b9fda1999f58b1
+  - enabled: 1
+    path: Assets/Scenes/Ocean.unity
+    guid: d3fde801f4c17bff6a3b9331b7de1fb1
   m_configObjects: {}

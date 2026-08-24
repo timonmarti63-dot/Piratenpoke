@@ -20,6 +20,7 @@ namespace Piratenpoke.SceneManagement
         public const string OverworldTestScene = "TestIsland";
         public const string VillageScene = "VillageKelpholm";
         public const string BattleScene = "BattleArena";
+        public const string OceanScene = "Ocean";
 
         [SerializeField] private FadeOverlay fadeOverlay;
 
@@ -43,6 +44,8 @@ namespace Piratenpoke.SceneManagement
         public void LeaveBattle() => StartCoroutine(ReturnToRemembered());
         public void EnterVillage() => StartCoroutine(SwitchTo(VillageScene, remember: false));
         public void EnterOverworld() => StartCoroutine(SwitchTo(OverworldTestScene, remember: false));
+        public void EnterOcean() => StartCoroutine(SwitchTo(OceanScene, remember: false));
+        public void LoadScene(string sceneName) => StartCoroutine(SwitchTo(sceneName, remember: false));
 
         private IEnumerator SwitchTo(string target, bool remember)
         {

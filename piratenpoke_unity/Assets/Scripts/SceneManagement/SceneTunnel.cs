@@ -9,7 +9,7 @@ namespace Piratenpoke.SceneManagement
     [RequireComponent(typeof(Collider))]
     public class SceneTunnel : MonoBehaviour
     {
-        public enum TargetScene { Overworld, Village, Battle }
+        public enum TargetScene { Overworld, Village, Battle, Ocean }
         [SerializeField] private TargetScene target = TargetScene.Village;
 
         private void Reset()
@@ -31,6 +31,7 @@ namespace Piratenpoke.SceneManagement
                 case TargetScene.Overworld: SceneRouter.Instance.EnterOverworld(); break;
                 case TargetScene.Village:   SceneRouter.Instance.EnterVillage(); break;
                 case TargetScene.Battle:    SceneRouter.Instance.EnterBattle(); break;
+                case TargetScene.Ocean:     SceneRouter.Instance.EnterOcean(); break;
             }
         }
     }

@@ -46,6 +46,7 @@ G = {
     "VillageController":    path_guid("Assets/Scripts/World/VillageController.cs"),
     "ShopNpc":              path_guid("Assets/Scripts/World/ShopNpc.cs"),
     "BootStrap":            path_guid("Assets/Scripts/Utils/BootStrap.cs"),
+    "OceanBuilder":         path_guid("Assets/Scripts/World/OceanBuilder.cs"),
 }
 
 # -- Asset GUIDs
@@ -630,6 +631,45 @@ def gen_test_island() -> str:
           moveSpeed: 0.9
           pauseAtWaypoint: 1.4
           capsuleRenderer: {{fileID: {boss_mr}}}
+        """))
+
+    # Tunnel -> Ocean (Anlegestelle am Suedrand, zurueck aufs Schiff)
+    ocean_go = fid(); ocean_tr = fid(); ocean_col = fid(); ocean_script = fid()
+    parts.append(dedent(f"""\
+        --- !u!1 &{ocean_go}
+        GameObject:
+          m_ObjectHideFlags: 0
+          serializedVersion: 6
+          m_Component:
+          - component: {{fileID: {ocean_tr}}}
+          - component: {{fileID: {ocean_col}}}
+          - component: {{fileID: {ocean_script}}}
+          m_Layer: 0
+          m_Name: TunnelToOcean
+          m_IsActive: 1
+        --- !u!4 &{ocean_tr}
+        Transform:
+          m_GameObject: {{fileID: {ocean_go}}}
+          m_LocalRotation: {{x: 0, y: 0, z: 0, w: 1}}
+          m_LocalPosition: {{x: 0, y: 1, z: -20}}
+          m_LocalScale: {{x: 8, y: 3, z: 2}}
+          m_Children: []
+          m_Father: {{fileID: 0}}
+        --- !u!65 &{ocean_col}
+        BoxCollider:
+          m_GameObject: {{fileID: {ocean_go}}}
+          m_IsTrigger: 1
+          m_Enabled: 1
+          m_Size: {{x: 1, y: 1, z: 1}}
+          m_Center: {{x: 0, y: 0, z: 0}}
+        --- !u!114 &{ocean_script}
+        MonoBehaviour:
+          m_ObjectHideFlags: 0
+          m_GameObject: {{fileID: {ocean_go}}}
+          m_Enabled: 1
+          m_Script: {{fileID: 11500000, guid: {G['SceneTunnel']}, type: 3}}
+          m_Name:
+          target: 3
         """))
 
     # Tunnel -> Village (grosser Trigger-Cube am Nordrand)
@@ -1241,13 +1281,55 @@ def gen_battle_arena() -> str:
     return "\n".join(parts)
 
 
+def gen_ocean() -> str:
+    """Minimale Ocean-Scene: nur OceanBuilder + SceneRouter-Bindings.
+    Rest wird zur Laufzeit erzeugt (Wasser, Inseln, Schiff, Kamera)."""
+    global _fid_counter
+    _fid_counter = 100
+    parts = [scene_settings()]
+    # Kein Licht, kein Terrain, keine Kamera in der Scene -- OceanBuilder
+    # spawnt alles beim Awake. So kann die Scene ohne Package-GUIDs auskommen.
+
+    # SceneRouter + FadeOverlay wandern per DontDestroyOnLoad aus Boot-Scene mit;
+    # in der Ocean-Scene brauchen wir nur einen Builder-Trigger.
+    ob_go = fid(); ob_tr = fid(); ob_script = fid()
+    parts.append(dedent(f"""\
+        --- !u!1 &{ob_go}
+        GameObject:
+          m_ObjectHideFlags: 0
+          m_Component:
+          - component: {{fileID: {ob_tr}}}
+          - component: {{fileID: {ob_script}}}
+          m_Layer: 0
+          m_Name: OceanBuilder
+          m_IsActive: 1
+        --- !u!4 &{ob_tr}
+        Transform:
+          m_GameObject: {{fileID: {ob_go}}}
+          m_LocalRotation: {{x: 0, y: 0, z: 0, w: 1}}
+          m_LocalPosition: {{x: 0, y: 0, z: 0}}
+          m_LocalScale: {{x: 1, y: 1, z: 1}}
+          m_Children: []
+          m_Father: {{fileID: 0}}
+        --- !u!114 &{ob_script}
+        MonoBehaviour:
+          m_ObjectHideFlags: 0
+          m_GameObject: {{fileID: {ob_go}}}
+          m_Enabled: 1
+          m_Script: {{fileID: 11500000, guid: {G['OceanBuilder']}, type: 3}}
+          m_Name:
+        """))
+    return "\n".join(parts)
+
+
 def main() -> None:
     SCENES.mkdir(parents=True, exist_ok=True)
     (SCENES / "Boot.unity").write_text(gen_boot(), encoding="utf-8")
     (SCENES / "TestIsland.unity").write_text(gen_test_island(), encoding="utf-8")
     (SCENES / "VillageKelpholm.unity").write_text(gen_village(), encoding="utf-8")
     (SCENES / "BattleArena.unity").write_text(gen_battle_arena(), encoding="utf-8")
-    print("4 Scenes geschrieben.")
+    (SCENES / "Ocean.unity").write_text(gen_ocean(), encoding="utf-8")
+    print("5 Scenes geschrieben.")
 
 
 if __name__ == "__main__":
