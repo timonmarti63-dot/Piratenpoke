@@ -20,3 +20,6 @@ MonoBehaviour:
   heal: 0
   accuracy: 0.9
   cooldown: 0
+  vfx: 2
+  vfxColor: {r: 0.6, g: 0.9, b: 0.3, a: 1.0}
+  vfxDuration: 0.5

@@ -154,6 +154,31 @@ namespace Piratenpoke.Battle
             cam.Priority = 20;
         }
 
+        /// <summary>
+        /// Kurzer Positional-Shake auf der aktuell aktiven Kamera.
+        /// Frame-Rate-unabhaengig, laeuft parallel zu Impact-Blends.
+        /// </summary>
+        public IEnumerator ShakeActive(float amplitude = 0.15f, float duration = 0.25f)
+        {
+            var cam = CurrentActive();
+            if (cam == null) yield break;
+            var tr = cam.transform;
+            Vector3 basePos = tr.position;
+            float t = 0f;
+            while (t < duration)
+            {
+                float damping = 1f - (t / duration);
+                Vector3 offset = new Vector3(
+                    (Random.value - 0.5f) * amplitude,
+                    (Random.value - 0.5f) * amplitude,
+                    (Random.value - 0.5f) * amplitude) * damping;
+                tr.position = basePos + offset;
+                t += Time.deltaTime;
+                yield return null;
+            }
+            tr.position = basePos;
+        }
+
         public IEnumerator PunchImpact(Transform victim, Transform attacker, float holdSeconds = 0.35f)
         {
             FocusImpact(victim, attacker);
@@ -179,7 +204,7 @@ namespace Piratenpoke.Battle
         private CinemachineCamera CurrentActive()
         {
             CinemachineCamera best = null; int bestP = int.MinValue;
-            foreach (var c in new[] { CamWide, CamPlayer, CamEnemy })
+            foreach (var c in new[] { CamWide, CamPlayer, CamEnemy, CamImpact })
             {
                 if (c == null) continue;
                 if (c.Priority > bestP) { bestP = c.Priority; best = c; }

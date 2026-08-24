@@ -9,6 +9,20 @@ namespace Piratenpoke.Data
     public enum SkillTarget { SingleEnemy, AllEnemies, SelfAlly, AllAllies }
 
     /// <summary>
+    /// Visuelle Kategorie fuer die Runtime-Effekt-Bibliothek. Steuert welcher
+    /// Particle-/Beam-/Trail-Effekt beim Einsatz gespielt wird.
+    /// </summary>
+    public enum SkillVfx
+    {
+        None,
+        Slash,       // Nahkampf-Schnittbogen (Feuerhieb, Rostklinge)
+        Projectile,  // Kleines gerichtetes Geschoss (Flutschuss, Giftdart)
+        Burst,       // Explosion um das Ziel (Sturmboe, Feuerknall)
+        Heal,        // Aufsteigende Heilpartikel um den Selbst-Wirker
+        Beam         // Kontinuierlicher Strahl vom Wirker zum Ziel
+    }
+
+    /// <summary>
     /// Ein einsetzbarer Kampf-Skill. Rein datentragend, keine Kampf-Laufzeit.
     /// Portiert von data/skills/*.tres aus dem Godot-2D-Vorprojekt.
     /// </summary>
@@ -29,5 +43,12 @@ namespace Piratenpoke.Data
         [Range(0f, 1f)] public float accuracy = 0.95f;
         [Tooltip("Wie viele Runden Cooldown nach Einsatz.")]
         public int cooldown = 0;
+
+        [Header("Visueller Effekt")]
+        public SkillVfx vfx = SkillVfx.None;
+        [Tooltip("Hauptfarbe des Effekts. Wenn transparent, wird die Element-Farbe verwendet.")]
+        public Color vfxColor = new Color(1f, 1f, 1f, 0f);
+        [Tooltip("Effekt-Dauer in Sekunden (0 = Standardwert der Kategorie).")]
+        [Range(0f, 3f)] public float vfxDuration = 0f;
     }
 }

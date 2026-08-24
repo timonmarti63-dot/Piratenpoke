@@ -130,9 +130,13 @@ def write_all_metas() -> dict[str, str]:
 
 def create_skill_asset(name: str, display: str, element: int, power: int,
                        heal: int = 0, accuracy: float = 0.95,
-                       target: int = 0, cooldown: int = 0) -> Path:
-    """element: 0=None 1=Fire 2=Water 3=Stone 4=Wind. target: 0=SingleEnemy usw."""
+                       target: int = 0, cooldown: int = 0,
+                       vfx: int = 0, vfx_duration: float = 0.0,
+                       vfx_color=(1.0, 1.0, 1.0, 0.0)) -> Path:
+    """element: 0=None 1=Fire 2=Water 3=Stone 4=Wind. target: 0=SingleEnemy usw.
+    vfx: 0=None 1=Slash 2=Projectile 3=Burst 4=Heal 5=Beam."""
     script_guid = path_guid("Assets/Scripts/ScriptableObjects/SkillSO.cs")
+    r, g, b, a = vfx_color
     body = dedent(f"""\
         %YAML 1.1
         %TAG !u! tag:unity3d.com,2011:
@@ -156,6 +160,9 @@ def create_skill_asset(name: str, display: str, element: int, power: int,
           heal: {heal}
           accuracy: {accuracy}
           cooldown: {cooldown}
+          vfx: {vfx}
+          vfxColor: {{r: {r}, g: {g}, b: {b}, a: {a}}}
+          vfxDuration: {vfx_duration}
         """)
     p = ASSETS / "Data" / "Skills" / f"{name}.asset"
     p.write_text(body, encoding="utf-8")
@@ -245,12 +252,13 @@ def create_combatant_asset(kind: str, name: str, display: str, element: int,
 def main() -> None:
     # -- 1. Skills
     skills = [
-        # (name, display, element, power, heal, accuracy)
-        ("Skill_EmberSlash", "Glut-Klinge",  1, 18, 0,  0.95),
-        ("Skill_TideShot",   "Flutschuss",   2, 16, 0,  0.90),
-        ("Skill_GaleGust",   "Sturmboe",     4, 15, 0,  1.00),
-        ("Skill_VenomDart",  "Giftdolch",    0, 12, 0,  0.90),
-        ("Skill_QuickBandage","Bandagieren", 0,  0, 18, 1.00),
+        # (name, display, element, power, heal, accuracy, target, cooldown, vfx, vfx_dur, vfx_color)
+        # vfx: 0=None 1=Slash 2=Projectile 3=Burst 4=Heal 5=Beam
+        ("Skill_EmberSlash", "Glut-Klinge",  1, 18, 0,  0.95, 0, 0, 1, 0.4, (1.0, 0.5, 0.15, 1.0)),
+        ("Skill_TideShot",   "Flutschuss",   2, 16, 0,  0.90, 0, 0, 2, 0.6, (0.3, 0.7, 1.0, 1.0)),
+        ("Skill_GaleGust",   "Sturmboe",     4, 15, 0,  1.00, 0, 0, 3, 0.7, (0.7, 1.0, 0.75, 1.0)),
+        ("Skill_VenomDart",  "Giftdolch",    0, 12, 0,  0.90, 0, 0, 2, 0.5, (0.6, 0.9, 0.3, 1.0)),
+        ("Skill_QuickBandage","Bandagieren", 0,  0, 18, 1.00, 2, 0, 4, 0.9, (0.4, 1.0, 0.55, 1.0)),
     ]
     for args in skills:
         create_skill_asset(*args)

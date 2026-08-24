@@ -39,6 +39,12 @@ namespace Piratenpoke.Battle
         [SerializeField, Range(0.1f, 2f)] private float impactHoldSeconds = 0.45f;
         [SerializeField, Range(0.05f, 1f)] private float postImpactPauseSeconds = 0.35f;
 
+        [Header("Effekte")]
+        [SerializeField, Range(0f, 0.5f)] private float shakeAmplitude = 0.18f;
+        [SerializeField, Range(0f, 1f)]  private float shakeDuration = 0.28f;
+
+        private SkillEffectPlayer _effectPlayer;
+
         private Combatant _player;
         private Combatant _enemy;
         private GameObject _playerModel;
@@ -77,8 +83,9 @@ namespace Piratenpoke.Battle
             EnsureCameraRig();
             cameraRig?.SetTargets(_playerModel.transform, _enemyModel.transform);
 
-            // -- 5. HUD sicherstellen und initialisieren
+            // -- 5. HUD sicherstellen und initialisieren + Effekt-Player
             EnsureHud();
+            EnsureEffectPlayer();
             hud.Initialize(_player, _enemy);
 
             // -- 6. Intro-Kamera (Wide)
@@ -160,25 +167,36 @@ namespace Piratenpoke.Battle
         private IEnumerator ResolveSkill(Combatant caster, Combatant target, SkillSO skill,
                                         GameObject casterGo, GameObject targetGo)
         {
-            if (skill == null) { yield return HighlightAndDamage(caster, target, 4, casterGo, targetGo); yield break; }
+            if (skill == null)
+            {
+                yield return HighlightAndDamage(caster, target, 4, casterGo, targetGo, null);
+                yield break;
+            }
 
+            // -- Heal-Path: gruener Puls am Caster + Popup
             if (skill.heal > 0)
             {
                 caster.Heal(skill.heal);
                 yield return Bump(casterGo, targetGo, up: true);
+                if (_effectPlayer != null && casterGo != null)
+                    yield return _effectPlayer.Play(skill, casterGo.transform, casterGo.transform);
+                if (casterGo != null)
+                    DamagePopup.Show(this, casterGo.transform, skill.heal, new Color(0.4f, 1f, 0.55f));
                 yield break;
             }
 
+            // -- Miss: kein Damage, aber ein "Miss"-Popup und kleiner Bump
             if (Random.value > skill.accuracy)
             {
-                Debug.Log($"{caster.DisplayName} verfehlt {target.DisplayName}!");
+                if (targetGo != null)
+                    DamagePopup.ShowText(this, targetGo.transform, "Miss", new Color(0.9f, 0.9f, 0.9f));
                 yield return Bump(casterGo, targetGo, up: false);
                 yield break;
             }
 
             int damage = ComputeDamage(caster, target, skill);
             target.TakeDamage(damage);
-            yield return HighlightAndDamage(caster, target, damage, casterGo, targetGo);
+            yield return HighlightAndDamage(caster, target, damage, casterGo, targetGo, skill);
         }
 
         private int ComputeDamage(Combatant caster, Combatant target, SkillSO skill)
@@ -199,20 +217,36 @@ namespace Piratenpoke.Battle
         }
 
         private IEnumerator HighlightAndDamage(Combatant caster, Combatant target,
-                                              int damage, GameObject casterGo, GameObject targetGo)
+                                              int damage, GameObject casterGo, GameObject targetGo,
+                                              SkillSO skill)
         {
             // 1. Angreifer bewegt sich in Richtung Ziel (Bump).
             var bump = StartCoroutine(Bump(casterGo, targetGo, up: true));
 
-            // 2. Kurz vor dem Impact snappt die Impact-Kamera aufs Ziel.
-            yield return new WaitForSeconds(0.12f);
+            // 2. Skill-VFX starten (Slash/Projectile/Burst/Beam). Laeuft parallel;
+            //    die Timeline wird ueber ImpactRatio synchronisiert.
+            Coroutine vfxCo = null;
+            if (_effectPlayer != null && skill != null && skill.vfx != SkillVfx.None
+                && casterGo != null && targetGo != null)
+            {
+                vfxCo = StartCoroutine(_effectPlayer.Play(skill, casterGo.transform, targetGo.transform));
+            }
+
+            // 3. Kurzer Vorlauf, dann Impact-Cam + Screenshake + Damage-Popup.
+            yield return new WaitForSeconds(0.15f);
             if (cameraRig != null && casterGo != null && targetGo != null)
             {
                 cameraRig.FocusImpact(targetGo.transform, casterGo.transform);
                 cameraRig.Activate(cameraRig.CamImpact, fastCut: true);
+                StartCoroutine(cameraRig.ShakeActive(shakeAmplitude, shakeDuration));
+            }
+            if (targetGo != null && damage > 0)
+            {
+                Color popupColor = SkillColor(skill);
+                DamagePopup.Show(this, targetGo.transform, damage, popupColor);
             }
 
-            // 3. Ziel wird rot markiert + kurzer Hold.
+            // 4. Ziel wird rot markiert + kurzer Hold.
             if (targetGo != null)
             {
                 var mr = targetGo.GetComponent<MeshRenderer>();
@@ -226,9 +260,23 @@ namespace Piratenpoke.Battle
                 yield return new WaitForSeconds(impactHoldSeconds);
             }
 
-            // 4. Bump auslaufen lassen und dann kurze Verschnaufpause.
+            // 5. Bump + VFX auslaufen lassen, dann kurze Verschnaufpause.
             if (bump != null) yield return bump;
+            if (vfxCo != null) yield return vfxCo;
             yield return new WaitForSeconds(postImpactPauseSeconds);
+        }
+
+        private Color SkillColor(SkillSO skill)
+        {
+            if (skill == null) return Color.white;
+            switch (skill.element)
+            {
+                case Element.Fire:  return new Color(1.0f, 0.6f, 0.2f);
+                case Element.Water: return new Color(0.4f, 0.75f, 1.0f);
+                case Element.Stone: return new Color(0.85f, 0.7f, 0.4f);
+                case Element.Wind:  return new Color(0.7f, 1.0f, 0.75f);
+                default:            return Color.white;
+            }
         }
 
         private IEnumerator Bump(GameObject a, GameObject b, bool up)
@@ -250,6 +298,14 @@ namespace Piratenpoke.Battle
             var hudGo = new GameObject("BattleHUD");
             hudGo.transform.SetParent(transform, false);
             hud = hudGo.AddComponent<BattleHUD>();
+        }
+
+        private void EnsureEffectPlayer()
+        {
+            if (_effectPlayer != null) return;
+            var go = new GameObject("SkillEffectPlayer");
+            go.transform.SetParent(transform, false);
+            _effectPlayer = go.AddComponent<SkillEffectPlayer>();
         }
 
         private void EnsureCameraRig()
