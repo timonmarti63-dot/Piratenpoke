@@ -1,0 +1,69 @@
+; Godot 4 Projektdatei — Piratenpoke
+; Engine wird beim ersten Öffnen in Godot 4.x weitere Felder automatisch ergänzen.
+
+config_version=5
+
+[application]
+
+config/name="Piratenpoke"
+config/description="2D-Top-Down-Piraten-RPG im Pokémon-Stil mit rundenbasiertem Kampfsystem."
+config/features=PackedStringArray("4.2", "GL Compatibility")
+run/main_scene="res://scenes/world/world.tscn"
+
+[display]
+
+; Fenster passt zu 64x64 Kacheln: 16x9 Kacheln sichtbar = 1024x576, skaliert auf 1280x720
+window/size/viewport_width=1024
+window/size/viewport_height=576
+window/size/window_width_override=1280
+window/size/window_height_override=720
+window/stretch/mode="viewport"
+window/stretch/aspect="keep"
+
+[rendering]
+
+textures/canvas_textures/default_texture_filter=0
+renderer/rendering_method="gl_compatibility"
+
+[input]
+
+move_up={
+"deadzone": 0.5,
+"events": [
+{"device":-1,"keycode":87,"physical_keycode":0,"unicode":0,"type":"InputEventKey"},
+{"device":-1,"keycode":4194320,"physical_keycode":0,"unicode":0,"type":"InputEventKey"}
+]
+}
+move_down={
+"deadzone": 0.5,
+"events": [
+{"device":-1,"keycode":83,"physical_keycode":0,"unicode":0,"type":"InputEventKey"},
+{"device":-1,"keycode":4194322,"physical_keycode":0,"unicode":0,"type":"InputEventKey"}
+]
+}
+move_left={
+"deadzone": 0.5,
+"events": [
+{"device":-1,"keycode":65,"physical_keycode":0,"unicode":0,"type":"InputEventKey"},
+{"device":-1,"keycode":4194319,"physical_keycode":0,"unicode":0,"type":"InputEventKey"}
+]
+}
+move_right={
+"deadzone": 0.5,
+"events": [
+{"device":-1,"keycode":68,"physical_keycode":0,"unicode":0,"type":"InputEventKey"},
+{"device":-1,"keycode":4194321,"physical_keycode":0,"unicode":0,"type":"InputEventKey"}
+]
+}
+interact={
+"deadzone": 0.5,
+"events": [
+{"device":-1,"keycode":69,"physical_keycode":0,"unicode":0,"type":"InputEventKey"},
+{"device":-1,"keycode":4194309,"physical_keycode":0,"unicode":0,"type":"InputEventKey"}
+]
+}
+
+[global]
+
+; Zentrale Konstanten
+tile_size=64
