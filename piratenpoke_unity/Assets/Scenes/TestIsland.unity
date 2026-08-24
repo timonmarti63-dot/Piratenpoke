@@ -884,33 +884,120 @@ MonoBehaviour:
 --- !u!1 &184
 GameObject:
   m_ObjectHideFlags: 0
-  serializedVersion: 6
   m_Component:
   - component: {fileID: 185}
-  - component: {fileID: 186}
-  - component: {fileID: 187}
   m_Layer: 0
-  m_Name: TunnelToVillage
+  m_Name: Boss_WP_A
   m_IsActive: 1
 --- !u!4 &185
 Transform:
   m_GameObject: {fileID: 184}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -3, y: 1, z: 14}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+--- !u!1 &186
+GameObject:
+  m_ObjectHideFlags: 0
+  m_Component:
+  - component: {fileID: 187}
+  m_Layer: 0
+  m_Name: Boss_WP_B
+  m_IsActive: 1
+--- !u!4 &187
+Transform:
+  m_GameObject: {fileID: 186}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 3, y: 1, z: 14}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+
+--- !u!1 &188
+GameObject:
+  m_ObjectHideFlags: 0
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 189}
+  - component: {fileID: 190}
+  - component: {fileID: 191}
+  - component: {fileID: 192}
+  - component: {fileID: 193}
+  m_Layer: 0
+  m_Name: KelpholmCaptain_Preview
+  m_IsActive: 1
+--- !u!4 &189
+Transform:
+  m_GameObject: {fileID: 188}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1.2, z: 14}
+  m_LocalScale: {x: 1.4, y: 1.6, z: 1.4}
+  m_Children: []
+  m_Father: {fileID: 0}
+--- !u!33 &190
+MeshFilter:
+  m_GameObject: {fileID: 188}
+  m_Mesh: {fileID: 10208, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &191
+MeshRenderer:
+  m_GameObject: {fileID: 188}
+  m_Enabled: 1
+  m_Materials:
+  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+--- !u!136 &192
+CapsuleCollider:
+  m_GameObject: {fileID: 188}
+  m_IsTrigger: 1
+  m_Enabled: 1
+  m_Radius: 0.9
+  m_Height: 2.6
+  m_Direction: 1
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &193
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_GameObject: {fileID: 188}
+  m_Enabled: 1
+  m_Script: {fileID: 11500000, guid: 5841faaf15dc9ffe085d68e9862a8217, type: 3}
+  m_Name:
+  enemyData: {fileID: 11400000, guid: b1aecc4f80a6d2826d9c28b2ce47b511, type: 2}
+  waypointA: {fileID: 185}
+  waypointB: {fileID: 187}
+  moveSpeed: 0.9
+  pauseAtWaypoint: 1.4
+  capsuleRenderer: {fileID: 191}
+
+--- !u!1 &194
+GameObject:
+  m_ObjectHideFlags: 0
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 195}
+  - component: {fileID: 196}
+  - component: {fileID: 197}
+  m_Layer: 0
+  m_Name: TunnelToVillage
+  m_IsActive: 1
+--- !u!4 &195
+Transform:
+  m_GameObject: {fileID: 194}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 1, z: 20}
   m_LocalScale: {x: 8, y: 3, z: 2}
   m_Children: []
   m_Father: {fileID: 0}
---- !u!65 &186
+--- !u!65 &196
 BoxCollider:
-  m_GameObject: {fileID: 184}
+  m_GameObject: {fileID: 194}
   m_IsTrigger: 1
   m_Enabled: 1
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &187
+--- !u!114 &197
 MonoBehaviour:
   m_ObjectHideFlags: 0
-  m_GameObject: {fileID: 184}
+  m_GameObject: {fileID: 194}
   m_Enabled: 1
   m_Script: {fileID: 11500000, guid: 6e07749a4cb33973170be309b155f12d, type: 3}
   m_Name:

@@ -24,13 +24,20 @@ namespace Piratenpoke.Battle
         public Transform playerSpawn;
         public Transform enemySpawn;
 
-        [Header("Kameras (Cinemachine)")]
+        [Header("Kameras (Cinemachine) -- optional; sonst Runtime-Rig")]
         public CinemachineCamera camWide;
         public CinemachineCamera camPlayer;
         public CinemachineCamera camEnemy;
+        [SerializeField] private BattleCameraRig cameraRig;
 
         [Header("UI")]
         public BattleHUD hud;
+
+        [Header("Timings")]
+        [SerializeField, Range(0.2f, 3f)] private float introSeconds = 1.4f;
+        [SerializeField, Range(0.1f, 2f)] private float actorFocusSeconds = 0.6f;
+        [SerializeField, Range(0.1f, 2f)] private float impactHoldSeconds = 0.45f;
+        [SerializeField, Range(0.05f, 1f)] private float postImpactPauseSeconds = 0.35f;
 
         private Combatant _player;
         private Combatant _enemy;
@@ -66,12 +73,17 @@ namespace Piratenpoke.Battle
             _playerModel.transform.LookAt(enemySpawn.position);
             _enemyModel.transform.LookAt(playerSpawn.position);
 
-            // -- 4. HUD initialisieren
-            if (hud != null) hud.Initialize(_player, _enemy);
+            // -- 4. Kamera-Rig bauen (falls nicht manuell verkabelt) und Ziele setzen
+            EnsureCameraRig();
+            cameraRig?.SetTargets(_playerModel.transform, _enemyModel.transform);
 
-            // -- 5. Intro-Kamera (Wide)
-            SwitchCamera(camWide);
-            yield return new WaitForSeconds(1.2f);
+            // -- 5. HUD sicherstellen und initialisieren
+            EnsureHud();
+            hud.Initialize(_player, _enemy);
+
+            // -- 6. Intro-Kamera (Wide)
+            ActivateCam(camWide);
+            yield return new WaitForSeconds(introSeconds);
 
             // -- 6. Runden bis KO oder Flucht
             while (_player.IsAlive && _enemy.IsAlive)
@@ -105,7 +117,8 @@ namespace Piratenpoke.Battle
 
         private IEnumerator PlayerTurn()
         {
-            SwitchCamera(camPlayer);
+            ActivateCam(camPlayer);
+            yield return new WaitForSeconds(actorFocusSeconds);
             if (hud != null) hud.OpenActionMenu();
 
             // Warte auf Spielereingabe (HUD setzt PendingSkill)
@@ -128,11 +141,13 @@ namespace Piratenpoke.Battle
 
         private IEnumerator EnemyTurn()
         {
-            SwitchCamera(camEnemy);
+            ActivateCam(camEnemy);
+            yield return new WaitForSeconds(actorFocusSeconds);
             // Simple KI: zufaelliger Skill mit Praeferenz auf Offensive
             var skill = ChooseEnemySkill();
-            yield return new WaitForSeconds(0.3f);
             yield return ResolveSkill(_enemy, _player, skill, _enemyModel, _playerModel);
+            // Nach dem Enemy-Turn zurueck zur Uebersicht.
+            ActivateCam(camWide);
         }
 
         private SkillSO ChooseEnemySkill()
@@ -186,15 +201,34 @@ namespace Piratenpoke.Battle
         private IEnumerator HighlightAndDamage(Combatant caster, Combatant target,
                                               int damage, GameObject casterGo, GameObject targetGo)
         {
-            yield return Bump(casterGo, targetGo, up: true);
+            // 1. Angreifer bewegt sich in Richtung Ziel (Bump).
+            var bump = StartCoroutine(Bump(casterGo, targetGo, up: true));
+
+            // 2. Kurz vor dem Impact snappt die Impact-Kamera aufs Ziel.
+            yield return new WaitForSeconds(0.12f);
+            if (cameraRig != null && casterGo != null && targetGo != null)
+            {
+                cameraRig.FocusImpact(targetGo.transform, casterGo.transform);
+                cameraRig.Activate(cameraRig.CamImpact, fastCut: true);
+            }
+
+            // 3. Ziel wird rot markiert + kurzer Hold.
             if (targetGo != null)
             {
                 var mr = targetGo.GetComponent<MeshRenderer>();
                 var origColor = mr != null ? mr.material.color : Color.white;
                 if (mr != null) mr.material.color = Color.red;
-                yield return new WaitForSeconds(0.15f);
+                yield return new WaitForSeconds(impactHoldSeconds);
                 if (mr != null) mr.material.color = origColor;
             }
+            else
+            {
+                yield return new WaitForSeconds(impactHoldSeconds);
+            }
+
+            // 4. Bump auslaufen lassen und dann kurze Verschnaufpause.
+            if (bump != null) yield return bump;
+            yield return new WaitForSeconds(postImpactPauseSeconds);
         }
 
         private IEnumerator Bump(GameObject a, GameObject b, bool up)
@@ -210,9 +244,39 @@ namespace Piratenpoke.Battle
             a.transform.position = start;
         }
 
-        private void SwitchCamera(CinemachineCamera cam)
+        private void EnsureHud()
+        {
+            if (hud != null) return;
+            var hudGo = new GameObject("BattleHUD");
+            hudGo.transform.SetParent(transform, false);
+            hud = hudGo.AddComponent<BattleHUD>();
+        }
+
+        private void EnsureCameraRig()
+        {
+            if (cameraRig == null)
+            {
+                var rigGo = new GameObject("BattleCameraRig");
+                rigGo.transform.SetParent(transform, false);
+                cameraRig = rigGo.AddComponent<BattleCameraRig>();
+            }
+            cameraRig.BuildIfNeeded();
+
+            // Serialized-Field-Kameras nur setzen, wenn im Editor nichts verdrahtet ist.
+            if (camWide == null) camWide = cameraRig.CamWide;
+            if (camPlayer == null) camPlayer = cameraRig.CamPlayer;
+            if (camEnemy == null) camEnemy = cameraRig.CamEnemy;
+        }
+
+        private void ActivateCam(CinemachineCamera cam)
         {
             if (cam == null) return;
+            if (cameraRig != null)
+            {
+                cameraRig.Activate(cam);
+                return;
+            }
+            // Fallback ohne Rig: nur Priority setzen.
             if (camWide != null) camWide.Priority = 10;
             if (camPlayer != null) camPlayer.Priority = 10;
             if (camEnemy != null) camEnemy.Priority = 10;

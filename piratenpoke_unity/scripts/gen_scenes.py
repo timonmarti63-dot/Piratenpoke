@@ -536,6 +536,102 @@ def gen_test_island() -> str:
           capsuleRenderer: {{fileID: {bandit_mr}}}
         """))
 
+    # --- Boss-Preview: Kelpholm-Captain als sichtbarer Feind (statisch, kein Patrouillieren)
+    # Wird direkt vor dem Tunnel plaziert, damit man den Boss-Kampf ohne Umweg testen kann.
+    boss_wp_a_go = fid(); boss_wp_a_tr = fid()
+    boss_wp_b_go = fid(); boss_wp_b_tr = fid()
+    parts.append(dedent(f"""\
+        --- !u!1 &{boss_wp_a_go}
+        GameObject:
+          m_ObjectHideFlags: 0
+          m_Component:
+          - component: {{fileID: {boss_wp_a_tr}}}
+          m_Layer: 0
+          m_Name: Boss_WP_A
+          m_IsActive: 1
+        --- !u!4 &{boss_wp_a_tr}
+        Transform:
+          m_GameObject: {{fileID: {boss_wp_a_go}}}
+          m_LocalRotation: {{x: 0, y: 0, z: 0, w: 1}}
+          m_LocalPosition: {{x: -3, y: 1, z: 14}}
+          m_LocalScale: {{x: 1, y: 1, z: 1}}
+          m_Children: []
+          m_Father: {{fileID: 0}}
+        --- !u!1 &{boss_wp_b_go}
+        GameObject:
+          m_ObjectHideFlags: 0
+          m_Component:
+          - component: {{fileID: {boss_wp_b_tr}}}
+          m_Layer: 0
+          m_Name: Boss_WP_B
+          m_IsActive: 1
+        --- !u!4 &{boss_wp_b_tr}
+        Transform:
+          m_GameObject: {{fileID: {boss_wp_b_go}}}
+          m_LocalRotation: {{x: 0, y: 0, z: 0, w: 1}}
+          m_LocalPosition: {{x: 3, y: 1, z: 14}}
+          m_LocalScale: {{x: 1, y: 1, z: 1}}
+          m_Children: []
+          m_Father: {{fileID: 0}}
+        """))
+    boss_go = fid(); boss_tr = fid(); boss_mf = fid(); boss_mr = fid()
+    boss_col = fid(); boss_script = fid()
+    parts.append(dedent(f"""\
+        --- !u!1 &{boss_go}
+        GameObject:
+          m_ObjectHideFlags: 0
+          serializedVersion: 6
+          m_Component:
+          - component: {{fileID: {boss_tr}}}
+          - component: {{fileID: {boss_mf}}}
+          - component: {{fileID: {boss_mr}}}
+          - component: {{fileID: {boss_col}}}
+          - component: {{fileID: {boss_script}}}
+          m_Layer: 0
+          m_Name: KelpholmCaptain_Preview
+          m_IsActive: 1
+        --- !u!4 &{boss_tr}
+        Transform:
+          m_GameObject: {{fileID: {boss_go}}}
+          m_LocalRotation: {{x: 0, y: 0, z: 0, w: 1}}
+          m_LocalPosition: {{x: 0, y: 1.2, z: 14}}
+          m_LocalScale: {{x: 1.4, y: 1.6, z: 1.4}}
+          m_Children: []
+          m_Father: {{fileID: 0}}
+        --- !u!33 &{boss_mf}
+        MeshFilter:
+          m_GameObject: {{fileID: {boss_go}}}
+          m_Mesh: {{fileID: 10208, guid: 0000000000000000e000000000000000, type: 0}}
+        --- !u!23 &{boss_mr}
+        MeshRenderer:
+          m_GameObject: {{fileID: {boss_go}}}
+          m_Enabled: 1
+          m_Materials:
+          - {{fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}}
+        --- !u!136 &{boss_col}
+        CapsuleCollider:
+          m_GameObject: {{fileID: {boss_go}}}
+          m_IsTrigger: 1
+          m_Enabled: 1
+          m_Radius: 0.9
+          m_Height: 2.6
+          m_Direction: 1
+          m_Center: {{x: 0, y: 0, z: 0}}
+        --- !u!114 &{boss_script}
+        MonoBehaviour:
+          m_ObjectHideFlags: 0
+          m_GameObject: {{fileID: {boss_go}}}
+          m_Enabled: 1
+          m_Script: {{fileID: 11500000, guid: {G['EnemyPatrol']}, type: 3}}
+          m_Name:
+          enemyData: {{fileID: 11400000, guid: {A['KelpholmCaptain']}, type: 2}}
+          waypointA: {{fileID: {boss_wp_a_tr}}}
+          waypointB: {{fileID: {boss_wp_b_tr}}}
+          moveSpeed: 0.9
+          pauseAtWaypoint: 1.4
+          capsuleRenderer: {{fileID: {boss_mr}}}
+        """))
+
     # Tunnel -> Village (grosser Trigger-Cube am Nordrand)
     tunnel_go = fid(); tunnel_tr = fid(); tunnel_col = fid(); tunnel_script = fid()
     parts.append(dedent(f"""\
