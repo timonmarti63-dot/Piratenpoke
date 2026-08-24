@@ -68,12 +68,19 @@ Mit `WASD` bewegen, `E` interagiert (Läden), `Enter` bestätigt.
 - 120 Gold, 3 kleine Tränke, 1 Gegengift.
 - Ziel-Route: Wind-Bandit → Dorf → Truppenführer → Läden.
 
-### Platzhalter regenerieren
+### Assets regenerieren
 
 ```bash
-python scripts/tools/gen_placeholder_tiles.py   # Einzel-PNGs neu
-python scripts/tools/gen_tileset_atlas.py       # Atlas neu bauen
+python scripts/tools/gen_pixelart_tiles.py      # v0.4: Pixel-Art Kacheln + Captain-Sprite
 ```
+
+Erzeugt alle 10 Tile-PNGs, `atlas.png` und `captain.png` im
+Pokémon-Gen-4-Piraten-Stil (16×16 gemalt, 4× hochskaliert). Nach einer
+Regenerierung Godot einmal starten, damit der Import-Cache neu aufgebaut wird
+(oder `.godot/imported/` löschen).
+
+`gen_placeholder_tiles.py` und `gen_tileset_atlas.py` sind DEPRECATED
+(einfarbige Platzhalter aus v0.1).
 
 > ⚠️ **`gen_world_tscn.py` und `gen_village_tscn.py` sind ab v0.4 DEPRECATED.**
 > Sie erzeugen TileMap-Daten im Format 2 mit falschem Encoding — Godot 4.3

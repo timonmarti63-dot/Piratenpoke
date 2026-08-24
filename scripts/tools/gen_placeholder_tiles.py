@@ -1,4 +1,8 @@
-"""Erzeugt farbige 64x64 Platzhalter-Kacheln + den Player-Sprite.
+"""[DEPRECATED v0.4] Erzeugt farbige 64x64 Platzhalter-Kacheln + den Player-Sprite.
+
+Dieses Skript erzeugt nur einfarbige Rechtecke. Ab v0.4 werden die Assets
+von `gen_pixelart_tiles.py` als echte Pixel-Art im Pokémon-Piraten-Stil
+generiert. Dieses Skript wird nur noch zur Erst-Bootstrap-Referenz aufbewahrt.
 
 Wird einmalig ausgeführt, um `assets/tiles/*.png` und `assets/sprites/captain.png`
 zu generieren. In der Pixel-Art-Phase werden diese Dateien einfach
