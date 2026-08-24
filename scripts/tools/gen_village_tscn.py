@@ -1,4 +1,10 @@
-"""Erzeugt scenes/world/village_kelpholm.tscn — Dorf Kelpholm.
+"""[DEPRECATED v0.4] Erzeugt scenes/world/village_kelpholm.tscn — Dorf Kelpholm.
+
+WICHTIG: Verwendet TileMap-format=2 mit falschem Encoding — siehe
+gen_world_tscn.py. Ab v0.4 nicht mehr ausführen; Karten direkt im Editor
+bzw. per TileMap.set_cell() pflegen.
+
+Ursprüngliches Dorf Kelpholm.
 
 Atlas-Codes (v0.4):
   0 grass, 1 sand, 2 path, 3 water, 4 tree, 5 rock,

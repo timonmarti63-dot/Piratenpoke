@@ -1,4 +1,12 @@
-"""Erzeugt scenes/world/world.tscn mit einer 16x9-Testkarte.
+"""[DEPRECATED v0.4] Erzeugt scenes/world/world.tscn mit einer 16x9-Testkarte.
+
+WICHTIG: Dieses Skript verwendet TileMap-format=2 mit falschem Encoding
+(erwartet [pos, source_id, atlas_x], Godot 4.3 will [pos, encoded, 0]
+mit encoded = atlas_x << 16 | source_id). Ergebnis: alle Nicht-Gras-Kacheln
+rendern als graue Blocks. Ab v0.4 werden world.tscn und village_kelpholm.tscn
+direkt im Godot-Editor bzw. per TileMap.set_cell() gepflegt — dieses Skript
+nicht mehr ausführen.
+
 
 Kachel-Codes (Atlas-Spalte 0-5):
   0 grass, 1 sand, 2 path, 3 water, 4 tree, 5 rock
