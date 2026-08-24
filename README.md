@@ -39,10 +39,24 @@ piratenpoke/
     └── islands/            # Insel-Konfigurationen (3 + 12)
 ```
 
-## 🗺️ Aktueller Stand
+## 🗺️ Aktueller Stand — v0.2
 
-Diese erste Version enthält nur **GDD + Projektstruktur** — noch kein spielbarer Code.
-Nächster Ausbauschritt: Grid-Movement + Kollision + Testraum mit farbigen Platzhaltern.
+Startbares Grundgerüst:
+
+- **Autoloads** `GameConfig` (Konstanten) und `InputBuffer` (globaler Richtungs-Puffer).
+- **`PlayerController`** mit Grid-Lock, Kollision über TileMap-Property `solid` und nahtlosem Input-Buffering.
+- **Testraum** (16 × 9 Kacheln) mit Baumrand, Pfad, Felsen als Hindernis und Sand + Wasser-Teich.
+- **Platzhalter-Assets** — farbige 64 × 64 PNGs (Gras, Sand, Pfad, Wasser, Baum, Fels + Captain-Sprite).
+
+**Start:** Godot 4.x → `Import` → `project.godot` → `F5`. Bewegung mit `WASD` / Pfeilen. Wasser, Bäume und Felsen blockieren, Sand/Pfad/Gras sind begehbar.
+
+### Platzhalter regenerieren
+
+```bash
+python scripts/tools/gen_placeholder_tiles.py   # Einzel-PNGs neu
+python scripts/tools/gen_tileset_atlas.py       # Atlas neu bauen
+python scripts/tools/gen_world_tscn.py          # Testkarte neu bauen
+```
 
 ## 🚀 Erste Öffnung in Godot
 
@@ -53,7 +67,7 @@ Nächster Ausbauschritt: Grid-Movement + Kollision + Testraum mit farbigen Platz
 ## 🗺️ Roadmap
 
 - [x] **v0.1** — GDD + Projektstruktur
-- [ ] **v0.2** — Grid-Movement, Input-Buffering, Kollision, Testraum
+- [x] **v0.2** — Grid-Movement, Input-Buffering, Kollision, Testraum
 - [ ] **v0.3** — Combat Scene, Stats, Typen-Multiplikator, 1-gegen-1 Rundenkampf
 - [ ] **v0.4** — Dorf mit `is_safe`-Zustand, Apotheke + Schmiede UI
 - [ ] **v0.5** — Schiff 1, Ozean-Tilemap, Häfen

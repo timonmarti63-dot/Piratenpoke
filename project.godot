@@ -10,6 +10,11 @@ config/description="2D-Top-Down-Piraten-RPG im Pokémon-Stil mit rundenbasiertem
 config/features=PackedStringArray("4.2", "GL Compatibility")
 run/main_scene="res://scenes/world/world.tscn"
 
+[autoload]
+
+GameConfig="*res://scripts/core/game_config.gd"
+InputBuffer="*res://scripts/core/input_buffer.gd"
+
 [display]
 
 ; Fenster passt zu 64x64 Kacheln: 16x9 Kacheln sichtbar = 1024x576, skaliert auf 1280x720
@@ -63,7 +68,3 @@ interact={
 ]
 }
 
-[global]
-
-; Zentrale Konstanten
-tile_size=64
