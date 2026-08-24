@@ -71,13 +71,16 @@ Mit `WASD` bewegen, `E` interagiert (Läden), `Enter` bestätigt.
 ### Assets regenerieren
 
 ```bash
-python scripts/tools/gen_pixelart_tiles.py      # v0.4: Pixel-Art Kacheln + Captain-Sprite
+python scripts/tools/gen_hd_tiles.py            # HD-Kacheln + Captain-Sprite (Switch-Aera)
 ```
 
-Erzeugt alle 10 Tile-PNGs, `atlas.png` und `captain.png` im
-Pokémon-Gen-4-Piraten-Stil (16×16 gemalt, 4× hochskaliert). Nach einer
-Regenerierung Godot einmal starten, damit der Import-Cache neu aufgebaut wird
-(oder `.godot/imported/` löschen).
+Erzeugt alle 10 Tile-PNGs, `atlas.png` und `captain.png` im modernen
+Pokémon-Switch-Stil (Sword/Shield und Scarlet/Violet als Referenz):
+64×64 nativ gerendert mit weichen Farbverläufen, Cel-Shading mit 6-10
+Farbstufen, weichen Alpha-Schatten und cinematischer Farbgebung.
+
+Nach einer Regenerierung Godot einmal starten, damit der Import-Cache neu
+aufgebaut wird (oder `.godot/imported/` löschen).
 
 `gen_placeholder_tiles.py` und `gen_tileset_atlas.py` sind DEPRECATED
 (einfarbige Platzhalter aus v0.1).
