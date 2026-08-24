@@ -39,9 +39,9 @@ piratenpoke/
     └── islands/            # Insel-Konfigurationen (3 + 12)
 ```
 
-## 🗺️ Aktueller Stand — v0.4
+## 🗺️ Aktueller Stand — v0.4 (verifiziert)
 
-Spielbares Grundgerüst **inkl. Kampfsystem, Dorf, Läden und Party**:
+Spielbares Grundgerüst **inkl. Kampfsystem, Dorf, Läden und Party** — vollständig durch Headless-Smoke-Tests (38/38 grün) und einen manuellen Playtest mit Godot 4.3 + `xvfb-run` verifiziert (Testraum, Dorf unsicher/sicher, Kampf, Apotheke, Schmiede).
 
 - **Autoloads (in Ladereihenfolge):** `GameConfig`, `InputBuffer`, `TypeChart`, `SceneRouter`, `Inventory`, `VillageState`, `Bootstrap`.
 - **`PlayerController`** mit Grid-Lock, Kollision, nahtlosem Input-Buffering. Interaktion via `E` / `Enter`.
@@ -60,6 +60,8 @@ Spielbares Grundgerüst **inkl. Kampfsystem, Dorf, Läden und Party**:
 **Start:** Godot 4.x → `Import` → `project.godot` → `F5`.
 Mit `WASD` bewegen, `E` interagiert (Läden), `Enter` bestätigt.
 
+> Getestet mit **Godot 4.3.stable**. Frühere 4.x-Versionen sind nicht offiziell unterstützt.
+
 ### Startzustand
 
 - 3 Crew: Käpt’n Bran (Feuer), Marina die Kanonierin (Wasser), Kite die Späherin (Wind).
@@ -71,9 +73,13 @@ Mit `WASD` bewegen, `E` interagiert (Läden), `Enter` bestätigt.
 ```bash
 python scripts/tools/gen_placeholder_tiles.py   # Einzel-PNGs neu
 python scripts/tools/gen_tileset_atlas.py       # Atlas neu bauen
-python scripts/tools/gen_world_tscn.py          # Testkarte neu bauen
-python scripts/tools/gen_village_tscn.py        # Dorf Kelpholm neu bauen
 ```
+
+> ⚠️ **`gen_world_tscn.py` und `gen_village_tscn.py` sind ab v0.4 DEPRECATED.**
+> Sie erzeugen TileMap-Daten im Format 2 mit falschem Encoding — Godot 4.3
+> rendert daraus graue Kacheln. Neue Karten stattdessen im Godot-Editor
+> oder per `TileMap.set_cell(layer, coords, source_id, atlas_coords)` in einem
+> `SceneTree`-Tool anlegen (siehe Commit `cf64a68`).
 
 ## 🚀 Erste Öffnung in Godot
 
@@ -86,10 +92,10 @@ python scripts/tools/gen_village_tscn.py        # Dorf Kelpholm neu bauen
 - [x] **v0.1** — GDD + Projektstruktur
 - [x] **v0.2** — Grid-Movement, Input-Buffering, Kollision, Testraum
 - [x] **v0.3** — Combat Scene, Stats, Typen-Multiplikator, 1-gegen-1 Rundenkampf
-- [x] **v0.4** — Party-Kampf, Item-Hierarchie, Dorf-Zustand, Apotheke + Schmiede
-- [ ] **v0.5** — Schiff 1, Ozean-Tilemap, Häfen
-- [ ] **v0.6** — Gym, XP-System, Level-Ups
-- [ ] **v0.7** — Erste 3 Inseln komplett spielbar
+- [x] **v0.4** — Party-Kampf (Wechseln/Item), Item-Hierarchie (`Consumable`/`Weapon`/`Armor`), `VillageState`, Dorf Kelpholm, Apotheke, Schmiede, Element-Restriktionen fürs Anlegen
+- [ ] **v0.5** — Schiff 1, Ozean-Tilemap, Häfen, freie Reise zwischen den 3 Startinseln
+- [ ] **v0.6** — Gym, XP-System, Level-Ups, Fertigkeitsbaum
+- [ ] **v0.7** — Erste 3 Inseln komplett spielbar (Dungeons, Sidequests, alle 9 Crew rekrutierbar)
 - [ ] **v1.0** — Schiff 2 + Splittermeer + 12 Endgame-Inseln
 
 Details siehe [`docs/GDD.md`](docs/GDD.md).
