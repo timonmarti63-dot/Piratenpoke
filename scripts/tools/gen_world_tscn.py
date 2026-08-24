@@ -69,10 +69,13 @@ for y in range(H):
 
 tile_data_str = ", ".join(str(n) for n in nums)
 
-tscn = f"""[gd_scene load_steps=4 format=3]
+tscn = f"""[gd_scene load_steps=6 format=3]
 
 [ext_resource type="TileSet" path="res://assets/tiles/world_tileset.tres" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/world/player.tscn" id="2"]
+[ext_resource type="Script" path="res://scripts/entities/enemy_encounter.gd" id="3"]
+[ext_resource type="Resource" path="res://data/crew/blaze_captain.tres" id="4"]
+[ext_resource type="Resource" path="res://data/enemies/wind_bandit.tres" id="5"]
 
 [node name="Root" type="Node2D"]
 
@@ -83,6 +86,15 @@ layer_0/name = "ground"
 layer_0/tile_data = PackedInt32Array({tile_data_str})
 
 [node name="Player" parent="." instance=ExtResource("2")]
+
+[node name="Encounter" type="Node2D" parent="."]
+script = ExtResource("3")
+world_tilemap_path = NodePath("../World")
+player_path = NodePath("../Player")
+encounter_cell = Vector2i(6, 2)
+player_data = ExtResource("4")
+enemy_data = ExtResource("5")
+vanish_on_win = true
 """
 
 out = Path(__file__).resolve().parents[2] / "scenes" / "world" / "world.tscn"

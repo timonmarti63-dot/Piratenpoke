@@ -14,6 +14,8 @@ run/main_scene="res://scenes/world/world.tscn"
 
 GameConfig="*res://scripts/core/game_config.gd"
 InputBuffer="*res://scripts/core/input_buffer.gd"
+TypeChart="*res://scripts/core/type_chart.gd"
+SceneRouter="*res://scripts/core/scene_router.gd"
 
 [display]
 

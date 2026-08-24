@@ -39,16 +39,24 @@ piratenpoke/
     └── islands/            # Insel-Konfigurationen (3 + 12)
 ```
 
-## 🗺️ Aktueller Stand — v0.2
+## 🗺️ Aktueller Stand — v0.3
 
-Startbares Grundgerüst:
+Startbares Grundgerüst **inkl. Kampfsystem**:
 
-- **Autoloads** `GameConfig` (Konstanten) und `InputBuffer` (globaler Richtungs-Puffer).
-- **`PlayerController`** mit Grid-Lock, Kollision über TileMap-Property `solid` und nahtlosem Input-Buffering.
-- **Testraum** (16 × 9 Kacheln) mit Baumrand, Pfad, Felsen als Hindernis und Sand + Wasser-Teich.
-- **Platzhalter-Assets** — farbige 64 × 64 PNGs (Gras, Sand, Pfad, Wasser, Baum, Fels + Captain-Sprite).
+- **Autoloads:** `GameConfig`, `InputBuffer`, `TypeChart` (Feuer/Wasser/Stein/Wind-Matrix), `SceneRouter` (World ↔ Combat mit Fade).
+- **`PlayerController`** mit Grid-Lock, Kollision, nahtlosem Input-Buffering.
+- **Combat Scene** mit rundenbasiertem 1-gegen-1:
+  - 4-Buttons-Menü (Kämpfen / Item / Wechseln / Flucht).
+  - Bis zu 4 Skills mit Effekten: `damage`, `heal`, `poison`, `def_buff`.
+  - Schadensformel `(atk / def) * power * type_multiplier`, Trefferchance, Initiative nach `speed`.
+  - Log-Panel mit Typ-Feedback („Sehr effektiv!“ / „Kaum wirksam …“).
+- **Data-Layer** (Custom Resources):
+  - `CombatantData` (Basis) → `CrewMember`, `EnemyData`.
+  - `Skill` mit Element, Power, Accuracy, Effekt.
+  - 5 Beispiel-Skills, 1 Test-Crew-Mitglied (Käpt’n Bran), 1 Test-Gegner (Wind-Bandit).
+- **Testraum** mit sichtbarem Gegner-Marker auf Kachel (6, 2). Bei Berührung startet der Kampf.
 
-**Start:** Godot 4.x → `Import` → `project.godot` → `F5`. Bewegung mit `WASD` / Pfeilen. Wasser, Bäume und Felsen blockieren, Sand/Pfad/Gras sind begehbar.
+**Start:** Godot 4.x → `Import` → `project.godot` → `F5`. Mit `WASD` in Richtung des roten Quadrats laufen, um einen Kampf auszulösen.
 
 ### Platzhalter regenerieren
 
@@ -68,7 +76,7 @@ python scripts/tools/gen_world_tscn.py          # Testkarte neu bauen
 
 - [x] **v0.1** — GDD + Projektstruktur
 - [x] **v0.2** — Grid-Movement, Input-Buffering, Kollision, Testraum
-- [ ] **v0.3** — Combat Scene, Stats, Typen-Multiplikator, 1-gegen-1 Rundenkampf
+- [x] **v0.3** — Combat Scene, Stats, Typen-Multiplikator, 1-gegen-1 Rundenkampf
 - [ ] **v0.4** — Dorf mit `is_safe`-Zustand, Apotheke + Schmiede UI
 - [ ] **v0.5** — Schiff 1, Ozean-Tilemap, Häfen
 - [ ] **v0.6** — Gym, XP-System, Level-Ups
