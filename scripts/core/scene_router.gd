@@ -1,18 +1,19 @@
 extends CanvasLayer
-## SceneRouter — globaler Szenenwechsel mit Fade + Zustands-Rückgabe (Autoload).
+## SceneRouter — globaler Szenenwechsel mit Fade + Kampf-Push/Pop (Autoload).
 ##
-## Warum CanvasLayer als Autoload?
-##   Wir wollen einen Overlay-ColorRect für den Fade, der über allen anderen
-##   Szenen liegt. CanvasLayer als Autoload garantiert, dass der Overlay
-##   auch nach Szenenwechsel oben bleibt.
+## Zwei Modi:
+##   push_battle(party, active_idx, enemy_data)
+##       World-Szene aus dem Baum nehmen, Combat einhängen. Nach Kampfende
+##       `finish_battle(outcome)` → World zurück, `battle_finished` feuern.
 ##
-## Nutzung:
-##   SceneRouter.push_battle(player_data, enemy_data, on_finish_callable)
-##   SceneRouter.change_world_scene("res://scenes/world/village.tscn")
-##
-## Auf Battle-Ende ruft der BattleController SceneRouter.finish_battle(outcome).
+##   change_world_scene(path, spawn_cell=null)
+##       Aktuelle Szene ersetzen (kein Zurück). Für Tunnel/Haus-Übergänge.
+##       Optional wird die Zielszene mit `set_spawn_cell(cell)` aufgerufen,
+##       falls sie diese Methode hat — z. B. um den Player an der Tür zu
+##       spawnen.
 
 signal battle_finished(outcome: StringName)
+signal world_scene_changed(scene: Node)
 
 const FADE_TIME: float = 0.35
 
@@ -42,35 +43,30 @@ func fade_in() -> void:
 	t.tween_property(_fade, "color:a", 0.0, FADE_TIME)
 	await t.finished
 
-## Startet einen Kampf. `player_data` und `enemy_data_` sind CombatantData-Instanzen.
-## Der Aufrufer kann sich mit `battle_finished` verbinden ODER `await`en.
-func push_battle(player_data: CombatantData, enemy_data_: CombatantData) -> void:
+# --- Battle Push/Pop --------------------------------------------------
+
+func push_battle(party: Array, active_index: int, enemy_data_: CombatantData) -> void:
 	if _in_battle:
 		return
 	_in_battle = true
-
 	await fade_out()
 
-	# Weltszene aus dem Baum nehmen (nicht killen — wir kommen zurück).
 	var tree := get_tree()
 	var current_root: Node = tree.current_scene
 	_saved_world_scene = current_root
 	_saved_world_parent = current_root.get_parent()
 	_saved_world_parent.remove_child(current_root)
 
-	# Battle-Szene laden und einhängen.
 	var packed: PackedScene = load(_battle_scene_path)
 	var battle: Node = packed.instantiate()
 	_saved_world_parent.add_child(battle)
 	tree.current_scene = battle
 
-	# Daten reichen.
 	if battle.has_method("start"):
-		battle.start(player_data, enemy_data_)
+		battle.start(party, active_index, enemy_data_)
 
 	await fade_in()
 
-## Vom BattleController am Kampfende aufgerufen.
 func finish_battle(outcome: StringName) -> void:
 	if not _in_battle:
 		return
@@ -80,7 +76,6 @@ func finish_battle(outcome: StringName) -> void:
 	var battle: Node = tree.current_scene
 	battle.queue_free()
 
-	# Weltszene zurück in den Baum.
 	if _saved_world_scene != null and _saved_world_parent != null:
 		_saved_world_parent.add_child(_saved_world_scene)
 		tree.current_scene = _saved_world_scene
@@ -91,3 +86,33 @@ func finish_battle(outcome: StringName) -> void:
 
 	await fade_in()
 	battle_finished.emit(outcome)
+
+# --- World-Szenenwechsel ---------------------------------------------
+
+## Wechselt die Weltszene komplett (kein Rücksprung wie bei Battle).
+## Wenn die Zielszene eine `set_spawn_cell(cell)`-Methode hat, wird sie
+## damit aufgerufen — praktisch für Tür-Positionen.
+func change_world_scene(path: String, spawn_cell = null) -> void:
+	await fade_out()
+	var packed: PackedScene = load(path)
+	if packed == null:
+		push_error("SceneRouter: Szene nicht gefunden: %s" % path)
+		await fade_in()
+		return
+	var new_scene: Node = packed.instantiate()
+	var tree := get_tree()
+	var old_scene: Node = tree.current_scene
+	var parent: Node = old_scene.get_parent()
+	parent.add_child(new_scene)
+	old_scene.queue_free()
+	tree.current_scene = new_scene
+	if spawn_cell != null:
+		if new_scene.has_method("set_spawn_cell"):
+			new_scene.set_spawn_cell(spawn_cell)
+		else:
+			# Fallback: PlayerController irgendwo in der Szene finden.
+			for p in tree.get_nodes_in_group("player_controller"):
+				if p.has_method("set_spawn_cell"):
+					p.set_spawn_cell(spawn_cell)
+	world_scene_changed.emit(new_scene)
+	await fade_in()

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CrewMember" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/crew_member.gd" id="1"]
+[ext_resource type="Resource" path="res://data/skills/gale_gust.tres" id="2"]
+[ext_resource type="Resource" path="res://data/skills/venom_dart.tres" id="3"]
+
+[resource]
+script = ExtResource("1")
+display_name = "Kite die Späherin"
+element = &"wind"
+max_hp = 42
+base_attack = 12
+base_defense = 6
+speed = 13
+skills = [ExtResource("2"), ExtResource("3")]
+level = 3
+xp = 0

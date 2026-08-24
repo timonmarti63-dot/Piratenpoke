@@ -16,5 +16,3 @@ speed = 10
 skills = [ExtResource("2"), ExtResource("3"), ExtResource("4")]
 level = 3
 xp = 0
-weapon_bonus_attack = 0
-armor_bonus_defense = 0

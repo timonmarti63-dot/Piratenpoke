@@ -16,6 +16,9 @@ GameConfig="*res://scripts/core/game_config.gd"
 InputBuffer="*res://scripts/core/input_buffer.gd"
 TypeChart="*res://scripts/core/type_chart.gd"
 SceneRouter="*res://scripts/core/scene_router.gd"
+Inventory="*res://scripts/core/inventory.gd"
+VillageState="*res://scripts/core/village_state.gd"
+Bootstrap="*res://scripts/core/bootstrap.gd"
 
 [display]
 

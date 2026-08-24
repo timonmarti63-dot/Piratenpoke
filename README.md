@@ -39,24 +39,32 @@ piratenpoke/
     └── islands/            # Insel-Konfigurationen (3 + 12)
 ```
 
-## 🗺️ Aktueller Stand — v0.3
+## 🗺️ Aktueller Stand — v0.4
 
-Startbares Grundgerüst **inkl. Kampfsystem**:
+Spielbares Grundgerüst **inkl. Kampfsystem, Dorf, Läden und Party**:
 
-- **Autoloads:** `GameConfig`, `InputBuffer`, `TypeChart` (Feuer/Wasser/Stein/Wind-Matrix), `SceneRouter` (World ↔ Combat mit Fade).
-- **`PlayerController`** mit Grid-Lock, Kollision, nahtlosem Input-Buffering.
-- **Combat Scene** mit rundenbasiertem 1-gegen-1:
-  - 4-Buttons-Menü (Kämpfen / Item / Wechseln / Flucht).
-  - Bis zu 4 Skills mit Effekten: `damage`, `heal`, `poison`, `def_buff`.
-  - Schadensformel `(atk / def) * power * type_multiplier`, Trefferchance, Initiative nach `speed`.
-  - Log-Panel mit Typ-Feedback („Sehr effektiv!“ / „Kaum wirksam …“).
-- **Data-Layer** (Custom Resources):
-  - `CombatantData` (Basis) → `CrewMember`, `EnemyData`.
-  - `Skill` mit Element, Power, Accuracy, Effekt.
-  - 5 Beispiel-Skills, 1 Test-Crew-Mitglied (Käpt’n Bran), 1 Test-Gegner (Wind-Bandit).
-- **Testraum** mit sichtbarem Gegner-Marker auf Kachel (6, 2). Bei Berührung startet der Kampf.
+- **Autoloads (in Ladereihenfolge):** `GameConfig`, `InputBuffer`, `TypeChart`, `SceneRouter`, `Inventory`, `VillageState`, `Bootstrap`.
+- **`PlayerController`** mit Grid-Lock, Kollision, nahtlosem Input-Buffering. Interaktion via `E` / `Enter`.
+- **Rundenbasierter Kampf** mit vollständiger Party:
+  - 4-Buttons-Menü: Kämpfen / Item / Wechseln / Flucht.
+  - Skills, Items (Heilung, Gegengift, Buffs), Crew-Wechsel im Kampf, Flucht-Chance.
+  - Auto-Wechsel bei KO, Sieg vergibt XP + Gold.
+- **Item-Hierarchie** (Custom Resources): `Item` → `Consumable` / `Weapon` / `Armor`.
+  Waffen und Rüstungen können auf Elemente beschränkt sein (`allowed_elements`).
+- **Dorf Kelpholm** mit `is_safe`-Zustand:
+  - Vor Sieg über den Truppenführer: Encounter aktiv, Läden geschlossen.
+  - Nach Sieg: Truppenführer verschwindet, Apotheke + Schmiede öffnen.
+- **Apotheke** (Consumables) und **Schmiede** (Waffen/Rüstungen mit Element-Prüfung, direktes Anlegen).
+- **Testraum** mit Wind-Bandit-Encounter und **Portal ins Dorf** (Kachel `8,7`).
 
-**Start:** Godot 4.x → `Import` → `project.godot` → `F5`. Mit `WASD` in Richtung des roten Quadrats laufen, um einen Kampf auszulösen.
+**Start:** Godot 4.x → `Import` → `project.godot` → `F5`.
+Mit `WASD` bewegen, `E` interagiert (Läden), `Enter` bestätigt.
+
+### Startzustand
+
+- 3 Crew: Käpt’n Bran (Feuer), Marina die Kanonierin (Wasser), Kite die Späherin (Wind).
+- 120 Gold, 3 kleine Tränke, 1 Gegengift.
+- Ziel-Route: Wind-Bandit → Dorf → Truppenführer → Läden.
 
 ### Platzhalter regenerieren
 
@@ -64,6 +72,7 @@ Startbares Grundgerüst **inkl. Kampfsystem**:
 python scripts/tools/gen_placeholder_tiles.py   # Einzel-PNGs neu
 python scripts/tools/gen_tileset_atlas.py       # Atlas neu bauen
 python scripts/tools/gen_world_tscn.py          # Testkarte neu bauen
+python scripts/tools/gen_village_tscn.py        # Dorf Kelpholm neu bauen
 ```
 
 ## 🚀 Erste Öffnung in Godot
@@ -77,7 +86,7 @@ python scripts/tools/gen_world_tscn.py          # Testkarte neu bauen
 - [x] **v0.1** — GDD + Projektstruktur
 - [x] **v0.2** — Grid-Movement, Input-Buffering, Kollision, Testraum
 - [x] **v0.3** — Combat Scene, Stats, Typen-Multiplikator, 1-gegen-1 Rundenkampf
-- [ ] **v0.4** — Dorf mit `is_safe`-Zustand, Apotheke + Schmiede UI
+- [x] **v0.4** — Party-Kampf, Item-Hierarchie, Dorf-Zustand, Apotheke + Schmiede
 - [ ] **v0.5** — Schiff 1, Ozean-Tilemap, Häfen
 - [ ] **v0.6** — Gym, XP-System, Level-Ups
 - [ ] **v0.7** — Erste 3 Inseln komplett spielbar

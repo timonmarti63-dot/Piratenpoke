@@ -69,6 +69,11 @@ def main() -> None:
     solid("path",   (200, 180, 130), (140, 120, 80))  # begehbar
     tree()   # solid
     rock()   # solid
+    # v0.4: Dorfmaterialien
+    solid("plank",  (200, 170, 120), (130, 100, 70))  # begehbar (Holzboden)
+    solid("wall",   (150, 140, 130), (80, 70, 60))    # solid (Hauswand)
+    solid("door",   (110, 70, 40),   (70, 40, 20))    # begehbar (Tür)
+    solid("roof",   (170, 60, 60),   (110, 30, 30))   # solid (Dach)
     captain()
     print(f"OK — geschrieben nach {TILES_DIR} und {SPRITES_DIR}")
 

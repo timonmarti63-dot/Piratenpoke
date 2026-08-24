@@ -7,7 +7,9 @@ TILES = ROOT / "assets" / "tiles"
 TILE = 64
 
 # Reihenfolge = Atlas-Spalten-Index. Muss mit tileset.tres übereinstimmen!
-ORDER = ["grass", "sand", "path", "water", "tree", "rock"]
+# 0..5 wie in v0.2/0.3, 6..9 sind v0.4-Neuzugänge.
+ORDER = ["grass", "sand", "path", "water", "tree", "rock",
+         "plank", "wall", "door", "roof"]
 
 atlas = Image.new("RGBA", (TILE * len(ORDER), TILE), (0, 0, 0, 0))
 for i, name in enumerate(ORDER):

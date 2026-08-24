@@ -91,7 +91,7 @@ horizontal_alignment = 2
 custom_minimum_size = Vector2(0, 8)
 
 [node name="MenuArea" type="PanelContainer" parent="Root"]
-custom_minimum_size = Vector2(0, 160)
+custom_minimum_size = Vector2(0, 200)
 
 [node name="MenuStack" type="VBoxContainer" parent="Root/MenuArea"]
 
@@ -125,6 +125,26 @@ unique_name_in_owner = true
 [node name="SkillButtons" type="VBoxContainer" parent="Root/MenuArea/MenuStack/SkillMenu"]
 unique_name_in_owner = true
 
-[node name="BtnBack" type="Button" parent="Root/MenuArea/MenuStack/SkillMenu"]
+[node name="BtnSkillBack" type="Button" parent="Root/MenuArea/MenuStack/SkillMenu"]
+unique_name_in_owner = true
+text = "Zurück"
+
+[node name="ItemMenu" type="VBoxContainer" parent="Root/MenuArea/MenuStack"]
+unique_name_in_owner = true
+
+[node name="ItemButtons" type="VBoxContainer" parent="Root/MenuArea/MenuStack/ItemMenu"]
+unique_name_in_owner = true
+
+[node name="BtnItemBack" type="Button" parent="Root/MenuArea/MenuStack/ItemMenu"]
+unique_name_in_owner = true
+text = "Zurück"
+
+[node name="SwitchMenu" type="VBoxContainer" parent="Root/MenuArea/MenuStack"]
+unique_name_in_owner = true
+
+[node name="SwitchButtons" type="VBoxContainer" parent="Root/MenuArea/MenuStack/SwitchMenu"]
+unique_name_in_owner = true
+
+[node name="BtnSwitchBack" type="Button" parent="Root/MenuArea/MenuStack/SwitchMenu"]
 unique_name_in_owner = true
 text = "Zurück"

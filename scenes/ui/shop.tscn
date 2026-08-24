@@ -1,0 +1,52 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/shop_ui.gd" id="1"]
+
+[node name="Shop" type="Control"]
+script = ExtResource("1")
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 0
+
+[node name="Dim" type="ColorRect" parent="."]
+color = Color(0, 0, 0, 0.65)
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Panel" type="PanelContainer" parent="."]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -320.0
+offset_top = -220.0
+offset_right = 320.0
+offset_bottom = 220.0
+
+[node name="Box" type="VBoxContainer" parent="Panel"]
+
+[node name="Header" type="HBoxContainer" parent="Panel/Box"]
+
+[node name="Title" type="Label" parent="Panel/Box/Header"]
+unique_name_in_owner = true
+text = "Apotheke"
+theme_override_font_sizes/font_size = 24
+size_flags_horizontal = 3
+
+[node name="Gold" type="Label" parent="Panel/Box/Header"]
+unique_name_in_owner = true
+text = "Gold: 0"
+
+[node name="Sep1" type="HSeparator" parent="Panel/Box"]
+
+[node name="ItemList" type="VBoxContainer" parent="Panel/Box"]
+unique_name_in_owner = true
+size_flags_vertical = 3
+
+[node name="Status" type="Label" parent="Panel/Box"]
+unique_name_in_owner = true
+text = ""
+
+[node name="BackBtn" type="Button" parent="Panel/Box"]
+unique_name_in_owner = true
+text = "Zurück (ESC)"

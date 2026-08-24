@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="Consumable" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/consumable.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"potion_small"
+display_name = "Kleiner Heiltrank"
+description = "Stellt 25 HP wieder her."
+buy_price = 25
+sell_price = 10
+effect = &"heal"
+power = 25
+duration = 0
+usable_in_combat = true
+usable_in_overworld = true

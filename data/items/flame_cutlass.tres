@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="Weapon" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/weapon.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"weapon_flame_cutlass"
+display_name = "Flammen-Entermesser"
+description = "+7 Angriff. Nur Feuer- und Stein-Crew."
+buy_price = 220
+sell_price = 90
+attack_bonus = 7
+allowed_elements = [&"fire", &"stone"]

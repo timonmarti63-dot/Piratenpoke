@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="Consumable" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/consumable.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"elixir_atk"
+display_name = "Kampfrausch-Elixier"
+description = "+6 Angriff für 3 Runden."
+buy_price = 55
+sell_price = 22
+effect = &"atk_up"
+power = 6
+duration = 3
+usable_in_combat = true
+usable_in_overworld = false

@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="Consumable" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/consumable.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"potion_big"
+display_name = "Großer Heiltrank"
+description = "Stellt 60 HP wieder her."
+buy_price = 70
+sell_price = 30
+effect = &"heal"
+power = 60
+duration = 0

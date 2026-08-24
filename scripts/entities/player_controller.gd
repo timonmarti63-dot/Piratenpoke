@@ -25,6 +25,13 @@ func _ready() -> void:
 		push_warning("PlayerController: keine TileMap gefunden unter %s" % world_tilemap_path)
 	_cell = start_cell
 	position = _cell_to_world(_cell)
+	add_to_group("player_controller")
+
+## Wird von SceneRouter.change_world_scene(spawn_cell) genutzt.
+func set_spawn_cell(cell: Vector2i) -> void:
+	_cell = cell
+	position = _cell_to_world(_cell)
+	_is_moving = false
 
 func _process(_delta: float) -> void:
 	if _is_moving:

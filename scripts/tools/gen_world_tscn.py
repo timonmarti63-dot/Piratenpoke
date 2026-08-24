@@ -42,6 +42,9 @@ for y in range(6, 8):
 grid[7][12] = W_
 grid[7][13] = W_
 
+# Portal zum Dorf: eine Türkachel bei (8, 7)
+grid[7][8] = P
+
 # Godot TileMap-Format:
 # tile_data ist ein PackedInt32Array mit 3 ints pro Kachel:
 #   [encoded_pos, source_id, encoded_atlas_coords_with_alt]
@@ -74,8 +77,8 @@ tscn = f"""[gd_scene load_steps=6 format=3]
 [ext_resource type="TileSet" path="res://assets/tiles/world_tileset.tres" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/world/player.tscn" id="2"]
 [ext_resource type="Script" path="res://scripts/entities/enemy_encounter.gd" id="3"]
-[ext_resource type="Resource" path="res://data/crew/blaze_captain.tres" id="4"]
-[ext_resource type="Resource" path="res://data/enemies/wind_bandit.tres" id="5"]
+[ext_resource type="Resource" path="res://data/enemies/wind_bandit.tres" id="4"]
+[ext_resource type="Script" path="res://scripts/entities/scene_portal.gd" id="5"]
 
 [node name="Root" type="Node2D"]
 
@@ -92,9 +95,15 @@ script = ExtResource("3")
 world_tilemap_path = NodePath("../World")
 player_path = NodePath("../Player")
 encounter_cell = Vector2i(6, 2)
-player_data = ExtResource("4")
-enemy_data = ExtResource("5")
+enemy_data = ExtResource("4")
 vanish_on_win = true
+
+[node name="VillagePortal" type="Node2D" parent="."]
+script = ExtResource("5")
+player_path = NodePath("../Player")
+trigger_cell = Vector2i(8, 7)
+target_scene = "res://scenes/world/village_kelpholm.tscn"
+spawn_cell = Vector2i(10, 9)
 """
 
 out = Path(__file__).resolve().parents[2] / "scenes" / "world" / "world.tscn"

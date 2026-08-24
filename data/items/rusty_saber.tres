@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="Weapon" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/weapon.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"weapon_rusty_saber"
+display_name = "Rostiger Säbel"
+description = "+3 Angriff. Kann jeder tragen."
+buy_price = 80
+sell_price = 30
+attack_bonus = 3
+allowed_elements = []
