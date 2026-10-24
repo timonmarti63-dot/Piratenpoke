@@ -11,7 +11,7 @@
   html,body { margin:0; height:100%; background:var(--bg); color:var(--ink); overflow:hidden; overscroll-behavior:none; touch-action:none;
     font-family:"Trebuchet MS",system-ui,sans-serif; }
   #stage { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; }
-  #box { position:relative; width:min(100vw, calc(100dvh * 16 / 9)); aspect-ratio:16/9; }
+  #box { position:relative; width:min(100vw, calc(100dvh * 9 / 16)); aspect-ratio:9/16; }
   canvas { width:100%; height:100%; display:block; cursor:none; touch-action:none; }
   .ov { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; text-align:center; background:rgba(10,14,22,.72); }
   .ov.off { display:none; }
@@ -21,13 +21,13 @@
   button:active { transform:translateY(3px); box-shadow:0 2px 0 #a8741a; }
   #reload { position:absolute; right:10px; bottom:10px; font-size:clamp(12px,2.2vw,18px); padding:.5em 1em; background:#3b4d66; color:var(--ink); box-shadow:0 4px 0 #1f2b3c; }
   #rot { position:fixed; inset:0; z-index:9; background:var(--bg); display:none; align-items:center; justify-content:center; flex-direction:column; gap:10px; font-size:20px; font-weight:800; }
-  @media (orientation:portrait) { #rot { display:flex; } }
+  @media (orientation:landscape) and (pointer:coarse) and (max-height:600px) { #rot { display:flex; } }
 </style>
 </head>
 <body>
-<div id="rot"><div style="font-size:56px">📱↻</div>Bitte Handy quer halten</div>
+<div id="rot"><div style="font-size:56px">📱</div>Bitte Handy hochkant halten</div>
 <div id="stage"><div id="box">
-  <canvas id="c" width="960" height="540"></canvas>
+  <canvas id="c" width="540" height="960"></canvas>
   <button id="reload">Nachladen (R)</button>
   <div class="ov" id="start">
     <h1>FEDERJAGD</h1>
@@ -45,16 +45,16 @@
 
 <script>
 "use strict";
-const W = 960, H = 540, ROUND = 90, MAG = 8, RELOAD = 0.9;
+const W = 540, H = 960, ROUND = 90, MAG = 8, RELOAD = 0.9;
 const cv = document.getElementById("c"), ctx = cv.getContext("2d");
 const $ = id => document.getElementById(id);
 const rnd = (a, b) => a + Math.random() * (b - a);
 
 // Ebenen: 0 = weit weg (klein, viele Punkte) … 2 = nah (gross, wenige Punkte)
 const LAYERS = [
-  { scale: 0.45, pts: 25, speed: [90, 140],  y: [70, 230] },
-  { scale: 0.8,  pts: 15, speed: [130, 200], y: [90, 300] },
-  { scale: 1.35, pts: 5,  speed: [190, 280], y: [110, 360] },
+  { scale: 0.55, pts: 25, speed: [80, 130],  y: [110, 420] },
+  { scale: 0.95, pts: 15, speed: [120, 190], y: [140, 560] },
+  { scale: 1.5,  pts: 5,  speed: [180, 260], y: [170, 700] },
 ];
 
 let best = 0;
@@ -123,7 +123,7 @@ function shoot(x, y) {
     }
   }
   // Windmühle
-  if (Math.hypot(x - 760, y - 285) < 70) { mill.boost = 1.6; score += 10; pops.push({ x, y: y - 20, txt: "+10", life: 1, col: "#fff" }); sfx("hit"); return; }
+  if (Math.hypot(x - MX, y - MY) < 75) { mill.boost = 1.6; score += 10; pops.push({ x, y: y - 20, txt: "+10", life: 1, col: "#fff" }); sfx("hit"); return; }
   combo = 0;
 }
 function reload() { if (reloadT > 0 || ammo === MAG) return; reloadT = RELOAD; sfx("click"); }
@@ -180,33 +180,32 @@ function drawChicken(c) {
 
 function drawScene() {
   // Himmel
-  const g = ctx.createLinearGradient(0, 0, 0, 380); g.addColorStop(0, "#5aa9e6"); g.addColorStop(1, "#cfeefc");
+  const g = ctx.createLinearGradient(0, 0, 0, 640); g.addColorStop(0, "#5aa9e6"); g.addColorStop(1, "#cfeefc");
   ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
   // Wolken
   ctx.fillStyle = "rgba(255,255,255,.9)";
-  for (let i = 0; i < 4; i++) { const x = ((i * 300 + t * (6 + i * 3)) % (W + 300)) - 150, y = 60 + i * 38; ctx.beginPath(); ctx.ellipse(x, y, 70, 20, 0, 0, 7); ctx.ellipse(x + 40, y - 10, 50, 22, 0, 0, 7); ctx.ellipse(x - 40, y - 4, 42, 16, 0, 0, 7); ctx.fill(); }
+  for (let i = 0; i < 4; i++) { const x = ((i * 220 + t * (6 + i * 3)) % (W + 300)) - 150, y = 90 + i * 62; ctx.beginPath(); ctx.ellipse(x, y, 70, 20, 0, 0, 7); ctx.ellipse(x + 40, y - 10, 50, 22, 0, 0, 7); ctx.ellipse(x - 40, y - 4, 42, 16, 0, 0, 7); ctx.fill(); }
   // Berge
-  ctx.fillStyle = "#8aa7c4"; ctx.beginPath(); ctx.moveTo(0, 330); for (let x = 0; x <= W; x += 40) ctx.lineTo(x, 250 - 60 * Math.abs(Math.sin(x * .006 + 1)) - 20 * Math.sin(x * .02)); ctx.lineTo(W, 330); ctx.fill();
-  ctx.fillStyle = "#fff"; // Schneekappen
-  ctx.globalAlpha = .6; for (const x of [200, 520, 880]) { ctx.beginPath(); ctx.moveTo(x - 36, 214); ctx.lineTo(x, 170); ctx.lineTo(x + 36, 214); ctx.fill(); } ctx.globalAlpha = 1;
+  ctx.fillStyle = "#8aa7c4"; ctx.beginPath(); ctx.moveTo(0, 650); for (let x = 0; x <= W; x += 30) ctx.lineTo(x, 480 - 90 * Math.abs(Math.sin(x * .008 + 1)) - 25 * Math.sin(x * .02)); ctx.lineTo(W, 650); ctx.fill();
   chickens.filter(c => c.li === 0).forEach(drawChicken);
   // Hügel hinten
-  ctx.fillStyle = "#5c9a4a"; ctx.beginPath(); ctx.moveTo(0, H); for (let x = 0; x <= W; x += 30) ctx.lineTo(x, 350 - 30 * Math.sin(x * .008 + 2)); ctx.lineTo(W, H); ctx.fill();
+  ctx.fillStyle = "#5c9a4a"; ctx.beginPath(); ctx.moveTo(0, H); for (let x = 0; x <= W; x += 30) ctx.lineTo(x, 660 - 30 * Math.sin(x * .01 + 2)); ctx.lineTo(W, H); ctx.fill();
   drawMill();
   chickens.filter(c => c.li === 1).forEach(drawChicken);
   // Vordere Wiese + Tannen
-  ctx.fillStyle = "#3f7a34"; ctx.beginPath(); ctx.moveTo(0, H); for (let x = 0; x <= W; x += 30) ctx.lineTo(x, 430 - 22 * Math.sin(x * .011)); ctx.lineTo(W, H); ctx.fill();
-  for (const x of [60, 150, 880, 930]) tree(x, 440, x % 3 ? 1.2 : 1.6);
+  ctx.fillStyle = "#3f7a34"; ctx.beginPath(); ctx.moveTo(0, H); for (let x = 0; x <= W; x += 30) ctx.lineTo(x, 800 - 22 * Math.sin(x * .014)); ctx.lineTo(W, H); ctx.fill();
+  for (const x of [40, 120, 470, 525]) tree(x, 820, x % 3 ? 1.3 : 1.7);
   chickens.filter(c => c.li === 2).forEach(drawChicken);
   // Zaun ganz vorne
-  ctx.fillStyle = "#6b4a2b"; for (let x = 20; x < W; x += 90) ctx.fillRect(x, 480, 10, 60); ctx.fillRect(0, 495, W, 8); ctx.fillRect(0, 520, W, 8);
+  ctx.fillStyle = "#6b4a2b"; for (let x = 20; x < W; x += 90) ctx.fillRect(x, 880, 10, 80); ctx.fillRect(0, 895, W, 8); ctx.fillRect(0, 925, W, 8);
 }
 function tree(x, y, s) {
   ctx.fillStyle = "#4a2f18"; ctx.fillRect(x - 6 * s, y - 20 * s, 12 * s, 40 * s);
   ctx.fillStyle = "#1f5a2c"; for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.moveTo(x - (46 - i * 9) * s, y - (i * 34 - 8) * s); ctx.lineTo(x, y - (i * 34 + 56) * s); ctx.lineTo(x + (46 - i * 9) * s, y - (i * 34 - 8) * s); ctx.fill(); }
 }
+const MX = 400, MY = 585;
 function drawMill() {
-  const x = 760, y = 285;
+  const x = MX, y = MY;
   ctx.fillStyle = "#e9dcc2"; ctx.beginPath(); ctx.moveTo(x - 26, y + 92); ctx.lineTo(x - 16, y); ctx.lineTo(x + 16, y); ctx.lineTo(x + 26, y + 92); ctx.fill();
   ctx.fillStyle = "#a33a2a"; ctx.beginPath(); ctx.moveTo(x - 22, y + 2); ctx.lineTo(x, y - 22); ctx.lineTo(x + 22, y + 2); ctx.fill();
   ctx.fillStyle = "#6b4a2b"; ctx.fillRect(x - 7, y + 62, 14, 30);
