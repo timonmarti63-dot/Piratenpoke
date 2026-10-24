@@ -2,20 +2,31 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#10131c">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <title>Yeet It!</title>
 <style>
   :root { --bg:#10131c; --panel:#1b2030; --accent:#ffcc33; --text:#f3f5fa; --muted:#8d95ad; --ok:#46d37a; }
   * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; }
-  html,body { margin:0; height:100%; background:var(--bg); color:var(--text);
+  html,body { margin:0; height:100%; overscroll-behavior:none; touch-action:none; -webkit-touch-callout:none; background:var(--bg); color:var(--text);
     font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; overflow:hidden; }
-  #wrap { position:relative; width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; }
-  #stage { position:relative; width:min(100vw, calc(100vh * 16 / 9 * 0.78)); aspect-ratio:16/9; }
-  canvas { width:100%; height:100%; display:block; border-radius:10px; touch-action:none; background:#000; }
-  #hud { position:absolute; inset:0; pointer-events:none; display:flex; justify-content:space-between; padding:10px 14px; font-weight:800; text-shadow:0 2px 0 rgba(0,0,0,.35); font-size:clamp(14px,2.6vw,26px); }
+  #wrap { position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  #stage { position:relative; width:min(100vw, calc(100dvh * 16 / 9)); aspect-ratio:16/9; }
+  canvas { width:100%; height:100%; display:block; touch-action:none; background:#000; }
+  #hud { position:absolute; inset:0; padding-top:calc(env(safe-area-inset-top) + 10px) !important; pointer-events:none; display:flex; justify-content:space-between; padding:10px 14px; font-weight:800; text-shadow:0 2px 0 rgba(0,0,0,.35); font-size:clamp(14px,2.6vw,26px); }
   #hud small { display:block; font-weight:600; font-size:.55em; opacity:.8; }
-  #msg { position:absolute; left:0; right:0; top:42%; text-align:center; font-size:clamp(16px,3vw,30px); font-weight:800; text-shadow:0 2px 0 rgba(0,0,0,.4); pointer-events:none; }
-  #panel { width:min(100vw, calc(100vh * 16 / 9 * 0.78)); background:var(--panel); border-radius:12px; margin-top:8px; padding:8px; display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+  #msg { position:absolute; left:0; right:0; top:50%; text-align:center; font-size:clamp(16px,3vw,30px); font-weight:800; text-shadow:0 2px 0 rgba(0,0,0,.4); pointer-events:none; }
+  #panel { position:fixed; left:50%; transform:translateX(-50%); top:calc(env(safe-area-inset-top) + 4px); width:min(50vw, 520px); background:rgba(27,32,48,.88); border-radius:12px; padding:5px; display:flex; gap:5px; flex-wrap:wrap; justify-content:center; z-index:5; }
+  body.flying #panel { display:none; }
+  #rot { position:fixed; inset:0; z-index:50; background:var(--bg); display:none; align-items:center; justify-content:center; flex-direction:column; font-size:20px; font-weight:800; gap:12px; text-align:center; padding:20px; }
+  @media (orientation:portrait) { #rot { display:flex; } }
+  @media (max-height:520px) { .up span { display:none; } .up { flex:1 1 30%; padding:5px 7px; } .up b { font-size:.8em; } button { padding:6px 10px; font-size:13px; } }
   button { font:inherit; font-weight:700; color:var(--text); background:#2a3150; border:0; border-radius:10px; padding:9px 12px; cursor:pointer; min-width:0; }
   button:active { transform:translateY(1px); }
   button[disabled] { opacity:.45; cursor:default; }
@@ -38,6 +49,7 @@
 </style>
 </head>
 <body>
+<div id="rot"><div style="font-size:56px">📱↻</div>Bitte Handy quer halten</div>
 <div id="wrap">
   <div id="stage">
     <canvas id="c" width="960" height="540"></canvas>
@@ -143,6 +155,7 @@ function resetRun() {
 }
 const dist = () => Math.max(0, (p.x - LAUNCHER.x) / PX_PER_M);
 
+const buzz = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} };
 function setMsg(t) { $("msg").textContent = t; }
 
 // ============================ Welt-Generierung ============================
@@ -180,7 +193,7 @@ function launch(pull) {
   p.vx = Math.cos(ang) * v; p.vy = Math.sin(ang) * v;
   if (p.vx < 120) p.vx = 120;
   state = "flying"; setMsg("");
-  shake = 6;
+  shake = 6; buzz(25);
   burst(p.x, p.y, 14, "#fff");
   return true;
 }
@@ -189,7 +202,7 @@ function boost() {
   if (boosts <= 0) return;
   boosts--;
   p.vx += 380 + save.lvl.power * 20; p.vy = Math.min(p.vy, 0) - 380;
-  burst(p.x, p.y, 16, "#ffa733");
+  burst(p.x, p.y, 16, "#ffa733"); buzz(15);
   shake = 4;
 }
 
@@ -246,7 +259,7 @@ function update(dt) {
       } else if (o.t === "board" && !o.hit && p.x + p.r > o.x && p.x - p.r < o.x + o.w && p.y + p.r > o.y) {
         o.hit = true; p.vx *= 0.93;
         const v = 25 + Math.floor(dist() / 40); runCoins += v; save.coins += v;
-        burst(p.x, p.y, 28, "#ffffff"); shake = 9;
+        burst(p.x, p.y, 28, "#ffffff"); shake = 9; buzz(40);
       } else if (o.t === "balloon" && !o.popped && Math.hypot(o.x - p.x, o.y - p.y) < o.r + p.r) {
         o.popped = true; p.vy = -Math.max(520, Math.abs(p.vy) * 0.8); p.vx += 90;
         burst(o.x, o.y, 10, `hsl(${o.hue},80%,60%)`);
@@ -270,6 +283,7 @@ function update(dt) {
     cam += (Math.max(0, p.x - 260) - cam) * Math.min(1, dt * 8);
   }
 
+  document.body.classList.toggle("flying", state === "flying" || !!drag);
   $("dist").textContent = Math.floor(dist()) + " m";
   $("best").textContent = Math.max(save.best, Math.floor(dist()));
   $("coins").textContent = fmt(save.coins);
@@ -520,6 +534,9 @@ function frame(now) {
   update(dt); draw(); requestAnimationFrame(frame);
 }
 addEventListener("beforeunload", persist);
+document.addEventListener("visibilitychange", () => { if (document.hidden) persist(); });
+document.addEventListener("contextmenu", e => e.preventDefault());
+if ("serviceWorker" in navigator && location.protocol !== "file:") navigator.serviceWorker.register("sw.js").catch(() => {});
 resetRun(); refresh(); offlineCheck(); persist();
 requestAnimationFrame(frame);
 </script>
