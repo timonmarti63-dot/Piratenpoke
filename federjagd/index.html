@@ -129,12 +129,13 @@ function wstats(id) { const b = WP[id]; return { mag: b.mag + upLv(id, "mag") * 
 let curW;
 function applyWeapon() { if (!save.owned.includes(save.sel)) save.sel = "shotgun"; const s = wstats(save.sel); curW = Object.assign({ id: save.sel }, WP[save.sel], { radEff: s.rad }); MAG = s.mag; RELOAD = s.reload; }
 applyWeapon();
+let eggs = [], splats = [], redFlash = 0, hitMark = 0;
 let recoil = 0, muzzle = 0, shotCd = 0, holding = false, tracers = [], smoke = [], shells = [];
 const MODES = {
   classic:  { name: "Klassik",       ic: "🎯", desc: "90 Sekunden. Sammle so viele Punkte wie möglich.", round: 90, swarm: 30 },
   blitz:    { name: "Blitz",         ic: "⚡", desc: "Nur 45 Sekunden, doppelt so viele Vögel, Punkte x1,5.", round: 45, swarm: 15, spawnMul: .5, cap: 20, scoreMul: 1.5 },
   survival: { name: "Überleben",     ic: "❤️", desc: "Endlos mit 3 Herzen. Ein Rabe kostet ein Herz.", round: 600, swarm: 40, lives: 3 },
-  boss:     { name: "Boss-Hahn",     ic: "👑", desc: "Besiege den Riesenhahn in 75 Sekunden.", round: 75, boss: true },
+  boss:     { name: "Boss-Hahn",     ic: "👑", desc: "Der Riesenhahn wirft Eier und stürzt auf dich zu. 3 Herzen, 75 Sekunden.", round: 75, boss: true, hearts: 3 },
   sniper:   { name: "Scharfschütze", ic: "🔭", desc: "10 Schuss, kein Nachladen. Jeder Treffer gibt einen Schuss zurück. Punkte x2.", round: 120, sniper: true, scoreMul: 2 },
 };
 const MODE_ORDER = ["classic", "blitz", "survival", "boss", "sniper"];
@@ -159,7 +160,7 @@ const diff = () => state === "play" ? Math.min(1, (ROUND - timeLeft) / (ROUND <=
 const prog = () => state === "menu" ? 0 : Math.min(1, (ROUND - timeLeft) / ROUND);
 
 function start() {
-  applyWeapon(); curM = MODES[mode]; ROUND = curM.round; if (curM.sniper) MAG = 10; state = "play"; score = 0; timeLeft = ROUND; ammo = MAG; reloadT = 0; chickens = []; feathers = []; pops = []; rings = []; sparks = []; spawnT = 0; combo = 0; hits = 0; shots = 0; banner.life = 0; swarmQ = 0; swarmN = 0; swarmNext = curM.swarm || 0; endDelay = 0; bossWon = false; bossT = 2; lives = curM.lives || 0; holding = false; shotCd = 0; recoil = 0; muzzle = 0; tracers = []; smoke = []; shells = [];
+  applyWeapon(); curM = MODES[mode]; ROUND = curM.round; if (curM.sniper) MAG = 10; state = "play"; score = 0; timeLeft = ROUND; ammo = MAG; reloadT = 0; chickens = []; feathers = []; pops = []; rings = []; sparks = []; spawnT = 0; combo = 0; hits = 0; shots = 0; banner.life = 0; swarmQ = 0; swarmN = 0; swarmNext = curM.swarm || 0; endDelay = 0; bossWon = false; bossT = 2; lives = curM.lives || curM.hearts || 0; eggs = []; splats = []; redFlash = 0; hitMark = 0; holding = false; shotCd = 0; recoil = 0; muzzle = 0; tracers = []; smoke = []; shells = [];
   if (curM.boss) spawnBoss(); $("reload").style.display = curM.sniper ? "none" : "";
   $("start").classList.add("off"); $("end").classList.add("off");
 }
@@ -169,7 +170,7 @@ function finish() {
   if (isBest) save.bests[mode] = score;
   save.coins += score; persist(); refreshMenu();
   let h = "Zeit um!";
-  if (curM.lives) h = "Alle Herzen weg!"; else if (curM.sniper && ammo <= 0) h = "Munition leer!"; else if (curM.boss) h = bossWon ? "Boss besiegt!" : "Der Boss entkommt!";
+  if (curM.hearts && lives <= 0) h = "Der Boss hat dich erwischt!"; else if (curM.lives) h = "Alle Herzen weg!"; else if (curM.sniper && ammo <= 0) h = "Munition leer!"; else if (curM.boss) h = bossWon ? "Boss besiegt!" : "Der Boss entkommt!";
   $("end-h").textContent = isBest && score > 0 ? "Neuer Rekord!" : h;
   const acc = shots ? Math.round(hits / shots * 100) : 0, secs = Math.max(0, Math.floor(ROUND - timeLeft));
   $("end-t").textContent = `${curM.name}: ${score} Punkte (= +${score} Münzen) · ${hits} Treffer · ${acc} % Trefferquote${curM.lives ? " · " + secs + " s überlebt" : ""} · Rekord ${bestOf(mode)}`;
@@ -187,11 +188,13 @@ function sfx(kind) {
     else if (kind === "hit") { o.type = "square"; o.frequency.setValueAtTime(700, n); o.frequency.exponentialRampToValueAtTime(200, n + .2); g.gain.setValueAtTime(.12, n); g.gain.exponentialRampToValueAtTime(.001, n + .22); }
     else if (kind === "gold") { o.type = "triangle"; o.frequency.setValueAtTime(600, n); o.frequency.linearRampToValueAtTime(1400, n + .3); g.gain.setValueAtTime(.16, n); g.gain.exponentialRampToValueAtTime(.001, n + .4); }
     else if (kind === "boom") { o.type = "sawtooth"; o.frequency.setValueAtTime(110, n); o.frequency.exponentialRampToValueAtTime(24, n + .5); g.gain.setValueAtTime(.4, n); g.gain.exponentialRampToValueAtTime(.001, n + .55); }
+    else if (kind === "roar") { o.type = "sawtooth"; o.frequency.setValueAtTime(130, n); o.frequency.exponentialRampToValueAtTime(55, n + .6); g.gain.setValueAtTime(.3, n); g.gain.exponentialRampToValueAtTime(.001, n + .65); }
+    else if (kind === "whoosh") { o.type = "triangle"; o.frequency.setValueAtTime(700, n); o.frequency.exponentialRampToValueAtTime(180, n + .35); g.gain.setValueAtTime(.14, n); g.gain.exponentialRampToValueAtTime(.001, n + .38); }
     else if (kind === "bad") { o.type = "sawtooth"; o.frequency.setValueAtTime(200, n); o.frequency.exponentialRampToValueAtTime(50, n + .35); g.gain.setValueAtTime(.2, n); g.gain.exponentialRampToValueAtTime(.001, n + .38); }
     else if (kind === "swarm") { o.type = "square"; o.frequency.setValueAtTime(260, n); o.frequency.setValueAtTime(390, n + .12); o.frequency.setValueAtTime(520, n + .24); g.gain.setValueAtTime(.12, n); g.gain.exponentialRampToValueAtTime(.001, n + .4); }
     else if (kind === "click") { o.type = "square"; o.frequency.value = 120; g.gain.setValueAtTime(.1, n); g.gain.exponentialRampToValueAtTime(.001, n + .06); }
     else { o.type = "triangle"; o.frequency.setValueAtTime(300, n); o.frequency.linearRampToValueAtTime(500, n + .25); g.gain.setValueAtTime(.12, n); g.gain.exponentialRampToValueAtTime(.001, n + .3); }
-    o.start(n); o.stop(n + .4);
+    o.start(n); o.stop(n + .7);
   } catch (e) {}
 }
 
@@ -204,7 +207,51 @@ const PAL = {
   clock:   { base: ["#9fe6f4", "#2f9bb8", "#16607a"], wing: ["#4fb0cc", "#1c6b86"], belly: "#d8f6ff", collar: "#9be4f2", head: ["#b8f0fa", "#2f9bb8"], tails: ["#ffd84a", "#4fb0cc", "#1c6b86"], comb: "#ffb11c", cs: 1, skin: "#ffb11c", clock: true, glow: "rgba(120,230,255,.7)" },
 };
 PAL.boss = Object.assign({}, PAL.rooster, { glow: "rgba(255,70,40,.55)", cs: 1.8 });
-function spawnBoss() { spawn("boss"); const c = chickens[chickens.length - 1]; c.x = W / 2; c.y = c.y0 = 330; c.vx = 95; c.amp = 45; c.fq = 1.2; c.flap = 7; }
+function spawnBoss() { spawn("boss"); const c = chickens[chickens.length - 1]; c.x = W / 2; c.y0 = 330; c.y = -260; c.vx = 95; c.amp = 45; c.fq = 1.2; c.flap = 7; c.bm = "intro"; banner = { txt: "ACHTUNG: BOSS!", life: 2.2 }; sfx("roar"); }
+function damagePlayer(n, x, y) {
+  lives = Math.max(0, lives - n); redFlash = .7; shake = 20; combo = 0; sfx("bad");
+  splats.push({ x: Math.max(60, Math.min(W - 60, x)), y: H - 130 + rnd(-60, 40), life: 4.5, r: rnd(46, 74), seed: Math.random() * 9 });
+  pops.push({ x: Math.max(80, Math.min(W - 80, x)), y: H - 220, txt: n > 1 ? "-2 Herzen" : "-1 Herz", life: 1.3, col: "#ff8a9a", big: true });
+  if (lives <= 0 && endDelay <= 0) endDelay = 1;
+}
+function throwEggs(c) {
+  const bomb = c.atk === "bomb", n = bomb ? 1 : (c.enraged ? 5 : 3), sx = c.x + c.dir * 30, sy = c.y + 30;
+  for (let i = 0; i < n; i++) {
+    const tx = W / 2 + (i - (n - 1) / 2) * 76 + rnd(-24, 24), ty = H - 80, dx = tx - sx, dy = ty - sy, d = Math.hypot(dx, dy), sp = bomb ? 190 : (c.enraged ? 290 : 250);
+    eggs.push({ x: sx, y: sy, y0: sy, vx: dx / d * sp, vy: dy / d * sp, rot: 0, type: bomb ? "bomb" : "egg", hp: bomb ? 2 : 1, r: bomb ? 24 : 16, s: .55, dead: false, flash: 0 });
+  }
+  sfx("whoosh");
+}
+function hitEgg(e, dmg) {
+  hits++; hitMark = .2; e.hp -= dmg;
+  if (e.hp > 0) { e.flash = .2; pops.push({ x: e.x, y: e.y - 30, txt: "Au!", life: .6, col: "#ffd0a0" }); sfx("hit"); return; }
+  e.dead = true; combo++;
+  const p = e.type === "bomb" ? 40 : 15; score += p;
+  pops.push({ x: e.x, y: e.y - 24, txt: "+" + p, life: .9, col: "#fff" });
+  rings.push({ x: e.x, y: e.y, r: 6, life: .3, col: e.type === "bomb" ? "255,150,40" : "255,255,255" });
+  for (let i = 0; i < (e.type === "bomb" ? 20 : 10); i++) feathers.push({ x: e.x, y: e.y, vx: rnd(-200, 200), vy: rnd(-220, 60), r: rnd(0, 6), life: rnd(.5, 1), col: e.type === "bomb" ? ["#ff9a1c", "#ffd93a", "#444"][(Math.random() * 3) | 0] : ["#fff", "#ffd93a"][(Math.random() * 2) | 0], sz: .55 });
+  sfx("hit");
+}
+function bossStep(c, dt) {
+  c.t2 += dt; c.ph += dt * c.flap; c.modeT = (c.modeT || 0) - dt; c.shakeX = 0;
+  const m = c.bm || "patrol", calm = () => { c.bm = "patrol"; c.atkT = c.enraged ? rnd(1.1, 1.9) : rnd(2, 3.1); };
+  if (m === "intro") { c.y += (c.y0 - c.y) * Math.min(1, dt * 2.2); if (Math.abs(c.y - c.y0) < 8) calm(); return; }
+  if (m === "patrol") {
+    c.x += c.vx * dt; if (c.x < 100) c.vx = Math.abs(c.vx); if (c.x > W - 100) c.vx = -Math.abs(c.vx); c.dir = c.vx > 0 ? 1 : -1;
+    c.y += (c.y0 + Math.sin(c.t2 * c.fq) * c.amp - c.y) * Math.min(1, dt * 5);
+    c.atkT -= dt;
+    if (c.atkT <= 0) { const r = Math.random(), dive = c.hp < c.maxhp * .75 && r < .32; c.atk = dive ? "dive" : (r < .62 ? "eggs" : "bomb"); c.bm = "tele"; c.modeT = dive ? .95 : .6; sfx("roar"); }
+    return;
+  }
+  if (m === "tele") { c.shakeX = rnd(-5, 5); c.flash = .06; if (c.modeT <= 0) { if (c.atk === "dive") { c.bm = "dive"; c.diveHits = 0; sfx("whoosh"); } else { throwEggs(c); calm(); } } return; }
+  if (m === "dive") {
+    const tx = W / 2, ty = H - 210, dx = tx - c.x, dy = ty - c.y, d = Math.hypot(dx, dy);
+    if (d < 60) { damagePlayer(1, c.x, H - 100); c.bm = "ret"; } else { const sp = 700 * dt; c.x += dx / d * sp; c.y += dy / d * sp; c.dir = dx > 0 ? 1 : -1; }
+    return;
+  }
+  if (m === "ret") { c.y += (c.y0 - c.y) * Math.min(1, dt * 2.2); if (Math.abs(c.y - c.y0) < 14) calm(); return; }
+  if (m === "stun") { c.y += (c.y0 - 40 - c.y) * Math.min(1, dt * 3); c.x += c.vx * .2 * dt; if (c.x < 100 || c.x > W - 100) c.vx *= -1; if (c.modeT <= 0) calm(); return; }
+}
 function pickSpecies() {
   const el = (ROUND - timeLeft) * (90 / Math.min(ROUND, 90)), r = Math.random();
   if (r < .04) return "gold";
@@ -246,30 +293,36 @@ function shoot(x, y) {
   for (let i = 0; i < 4; i++) smoke.push({ x: ps.tx, y: ps.ty, vx: dx0 * 50 + rnd(-25, 25), vy: dy0 * 50 + rnd(-35, 5), r: 5, life: .7, max: .7, col: "210,210,215" });
   if (!curW.blast) shells.push({ x: ps.px + dx0 * 50, y: ps.py + dy0 * 50, vx: rnd(60, 150), vy: -rnd(140, 230), rot: 0, life: 1 });
   const alive = chickens.filter(c => !c.dead);
-  let targets = [];
+  let targets = [], eggHit = 0;
   if (curW.blast) {
     const R = curW.blast;
     targets = alive.filter(c => Math.hypot(c.x - x, c.y - y) < R + c.hx * c.s * .4);
+    for (const e of eggs) if (!e.dead && Math.hypot(e.x - x, e.y - y) < R + e.r * e.s) { hitEgg(e, 2); eggHit++; }
     rings.push({ x, y, r: 10, life: .45, col: "255,170,60" }); rings.push({ x, y, r: 4, life: .3, col: "255,255,255" });
     for (let i = 0; i < 26; i++) { const a = Math.random() * 6.3, v = rnd(40, 240); smoke.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, r: rnd(6, 16), life: rnd(.4, .9), max: .9, col: Math.random() < .5 ? "255,150,40" : "90,90,95" }); }
     shake = 14; hitStop = .05;
   } else {
     const order = alive.sort((a, b) => b.li - a.li || b.s - a.s), m = curW.radEff;
+    const near = eggs.filter(e => !e.dead && Math.hypot(e.x - x, e.y - y) < e.r * e.s * 1.7 * m).sort((a, b) => Math.hypot(a.x - x, a.y - y) - Math.hypot(b.x - x, b.y - y)).slice(0, curW.pierce);
+    near.forEach(e => hitEgg(e, curW.dmg)); eggHit = near.length;
     for (const c of order) {
+      if (targets.length + eggHit >= curW.pierce) break;
       const dx = x - c.x, dy = y - (c.y + Math.sin(c.ph) * 6 * c.s);
-      if (dx * dx / (c.hx * c.s * m) ** 2 + dy * dy / (c.hy * c.s * m) ** 2 < 1.2) { targets.push(c); if (targets.length >= curW.pierce) break; }
+      if (dx * dx / (c.hx * c.s * m) ** 2 + dy * dy / (c.hy * c.s * m) ** 2 < 1.2) targets.push(c);
     }
   }
-  if (targets.length) { targets.forEach(c => hitChicken(c, curW.dmg)); return; }
+  if (targets.length || eggHit) { targets.forEach(c => hitChicken(c, curW.dmg)); return; }
   if (Math.hypot(x - MX, y - (MY + 40)) < (curW.blast || 0) + 80) { mill.boost = 1.6; score += 10; pops.push({ x, y: y - 20, txt: "+10", life: 1, col: "#fff" }); rings.push({ x, y, r: 6, life: .3, col: "255,255,255" }); sfx("hit"); return; }
   combo = 0;
 }
 function hitChicken(c, dmg = 1) {
   const dark = c.sp === "crow";
   if (!dark) hits++;
-  c.hp -= dmg;
+  if (c.sp === "boss" && c.bm === "stun") dmg *= 2;
+  c.hp -= dmg; if (!dark) hitMark = .2;
   if (!dark && curM.sniper) ammo = Math.min(MAG, ammo + 1);
   if (c.sp === "boss") {
+    if (c.bm === "dive") { c.diveHits = (c.diveHits || 0) + 1; if (c.diveHits >= 2) { c.bm = "stun"; c.modeT = 2.4; banner = { txt: "BETÄUBT! x2 Schaden", life: 1.4 }; shake = 12; rings.push({ x: c.x, y: c.y, r: 10, life: .5, col: "255,255,120" }); sfx("gold"); } }
     combo++; const bp = 10 * (1 + Math.min(3, Math.floor(combo / 5))) * dmg; score += bp;
     pops.push({ x: c.x + rnd(-40, 40), y: c.y - 60 * c.s * .5, txt: "+" + bp, life: .8, col: "#fff" });
     if (c.hp > 0 && c.hp <= c.maxhp / 2 && !c.enraged) { c.enraged = true; c.vx *= 1.6; banner = { txt: "WUTANFALL!", life: 1.5 }; sfx("swarm"); }
@@ -285,7 +338,7 @@ function hitChicken(c, dmg = 1) {
     return;
   }
   if (c.sp === "boss") {
-    bossWon = true; const bonus = 400 + Math.floor(timeLeft) * 5; score += bonus; endDelay = 1.7; banner = { txt: "BOSS BESIEGT!", life: 2 };
+    bossWon = true; const bonus = 400 + Math.floor(timeLeft) * 5; score += bonus; endDelay = 2.2; hitStop = .4; flash = .35; banner = { txt: "BOSS BESIEGT!", life: 2.4 };
     pops.push({ x: c.x, y: c.y - 90, txt: "+" + bonus, life: 1.6, col: "#ffe066", big: true });
     for (let i = 0; i < 70; i++) feathers.push({ x: c.x + rnd(-60, 60), y: c.y + rnd(-40, 40), vx: rnd(-300, 300), vy: rnd(-340, 80), r: rnd(0, 6), life: rnd(1, 2), col: ["#e0803a", "#ffcf3a", "#2a5fb0", "#ff4a3a"][(Math.random() * 4) | 0], sz: rnd(1, 1.8) });
     rings.push({ x: c.x, y: c.y, r: 10, life: .6, col: "255,200,80" }); sfx("gold"); shake = 18; return;
@@ -294,8 +347,8 @@ function hitChicken(c, dmg = 1) {
   const mult = 1 + Math.min(3, Math.floor(combo / 5)), p = Math.round(c.pts * mult * (curM.scoreMul || 1)); score += p;
   pops.push({ x: c.x, y: c.y - 34 * c.s, txt: "+" + p + (mult > 1 ? " x" + mult : ""), life: 1, col: c.gold ? "#ffe066" : "#fff", big: c.gold || mult > 1 });
   if (c.sp === "clock") {
-    const tx = curM.lives ? "+1 Herz" : curM.sniper ? "+3 Schuss" : "+4 s";
-    if (curM.lives) lives = Math.min(3, lives + 1); else if (curM.sniper) ammo = Math.min(MAG, ammo + 3); else timeLeft += 4;
+    const tx = (curM.lives || curM.hearts) ? "+1 Herz" : curM.sniper ? "+3 Schuss" : "+4 s";
+    if (curM.lives || curM.hearts) lives = Math.min(3, lives + 1); else if (curM.sniper) ammo = Math.min(MAG, ammo + 3); else timeLeft += 4;
     pops.push({ x: c.x, y: c.y - 74 * c.s, txt: tx, life: 1.2, col: "#8fe9ff", big: true });
   }
   rings.push({ x: c.x, y: c.y, r: 6, life: .35, col: c.gold ? "255,220,80" : "255,255,255" });
@@ -310,6 +363,7 @@ function update(dt) {
   t += dt;
   mill.boost = Math.max(0, mill.boost - dt);
   mill.spin += dt * (0.5 + mill.boost * 6);
+  hitMark = Math.max(0, hitMark - dt); redFlash = Math.max(0, redFlash - dt);
   recoil = Math.max(0, recoil - dt * 7); muzzle = Math.max(0, muzzle - dt); shotCd = Math.max(0, shotCd - dt);
   for (const q of tracers) q.life -= dt; tracers = tracers.filter(q => q.life > 0);
   for (const q of smoke) { q.x += q.vx * dt; q.y += q.vy * dt; q.vx *= .96; q.vy = q.vy * .96 - 20 * dt; q.r += 26 * dt; q.life -= dt; } smoke = smoke.filter(q => q.life > 0);
@@ -331,6 +385,13 @@ function update(dt) {
 
   if (curM.sniper) { if (ammo <= 0 && endDelay <= 0) endDelay = 1.4; else if (ammo > 0) endDelay = 0; }
   if (endDelay > 0) { endDelay -= dt; if (endDelay <= 0) { finish(); return; } }
+  for (const e of eggs) {
+    e.x += e.vx * dt; e.y += e.vy * dt; e.rot += dt * 7; e.flash = Math.max(0, e.flash - dt); e.s = .55 + .7 * Math.max(0, Math.min(1, (e.y - e.y0) / (H - 80 - e.y0)));
+    if (Math.random() < dt * 24) smoke.push({ x: e.x, y: e.y, vx: rnd(-10, 10), vy: rnd(-10, 10), r: 4 * e.s, life: .4, max: .4, col: e.type === "bomb" ? "255,150,40" : "255,255,255" });
+    if (!e.dead && e.y >= H - 80) { e.dead = true; damagePlayer(e.type === "bomb" ? 2 : 1, e.x, e.y); rings.push({ x: e.x, y: H - 80, r: 6, life: .35, col: "255,90,60" }); }
+  }
+  eggs = eggs.filter(e => !e.dead);
+  redFlash = Math.max(0, redFlash - dt); hitMark = Math.max(0, hitMark - dt); for (const s of splats) s.life -= dt; splats = splats.filter(s => s.life > 0);
   timeLeft -= dt;
   if (timeLeft <= 0) { timeLeft = 0; finish(); return; }
   if (reloadT > 0) { reloadT -= dt; if (reloadT <= 0) { ammo = MAG; sfx("ready"); } }
@@ -338,16 +399,13 @@ function update(dt) {
   if (swarmQ > 0) { swarmT -= dt; if (swarmT <= 0) { spawn(Math.random() < .25 ? "chick" : "hen"); swarmQ--; swarmT = .17; } }
   if (holding && curW.auto) shoot(mouse.x, mouse.y);
   spawnT -= dt; const d = diff();
-  if (curM.boss) { bossT -= dt; if (bossT <= 0 && chickens.length < 9) { spawn(Math.random() < .3 ? "chick" : "hen"); bossT = rnd(1.6, 2.6); } }
+  if (curM.boss) { bossT -= dt; if (bossT <= 0 && chickens.length < 9) { spawn(Math.random() < .12 ? "clock" : Math.random() < .3 ? "chick" : "hen"); bossT = rnd(1.6, 2.6); } }
   else if (spawnT <= 0 && chickens.length < (curM.cap || 16)) { spawn(); spawnT = rnd(.3, 1.0) * (1.25 - .55 * d) * (curM.spawnMul || 1); }
   for (const c of chickens) stepChicken(c, dt);
   chickens = chickens.filter(c => c.x > -160 && c.x < W + 160 && c.y < H + 100);
 }
 function stepChicken(c, dt) {
-  if (!c.dead && c.sp === "boss") {
-    c.x += c.vx * dt; if (c.x < 100) c.vx = Math.abs(c.vx); if (c.x > W - 100) c.vx = -Math.abs(c.vx); c.dir = c.vx > 0 ? 1 : -1;
-    c.t2 += dt; c.ph += dt * c.flap; c.y = c.y0 + Math.sin(c.t2 * c.fq) * c.amp; return;
-  }
+  if (!c.dead && c.sp === "boss") { bossStep(c, dt); return; }
   if (c.dead) { c.vy += 950 * dt; c.y += c.vy * dt; c.x += c.vx * dt; c.rot += dt * 9 * c.dir; return; }
   c.t2 += dt; c.ph += dt * c.flap * c.bob;
   const m = c.dash ? 1 + .9 * Math.max(0, Math.sin(c.t2 * 1.6)) : 1;
@@ -438,7 +496,49 @@ function cloud(x, y, s) {
   ctx.restore();
 }
 
-function drawChicken(c) { if (c.sp === "chick") drawChick(c); else drawBird(c, PAL[c.sp] || PAL.hen); }
+function drawChicken(c) {
+  const boss = c.sp === "boss" && !c.dead;
+  if (boss) { ctx.save(); ctx.translate(c.shakeX || 0, 0); bossAura(c); }
+  if (c.sp === "chick") drawChick(c); else drawBird(c, PAL[c.sp] || PAL.hen);
+  if (boss) { bossExtras(c); ctx.restore(); }
+}
+function bossAura(c) {
+  const pulse = .5 + .5 * Math.sin(t * 5), tele = c.bm === "tele", col = tele ? "255,60,40" : c.enraged ? "255,60,30" : "255,170,40";
+  const g = ctx.createRadialGradient(c.x, c.y, 20, c.x, c.y, 250 + pulse * 30); g.addColorStop(0, `rgba(${col},${.42 + pulse * .18})`); g.addColorStop(1, `rgba(${col},0)`);
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(c.x, c.y, 290, 0, 7); ctx.fill();
+}
+function bossExtras(c) {
+  const s = c.s;
+  ctx.save(); ctx.translate(c.x + 30 * s * c.dir, c.y - 46 * s); ctx.scale(s * c.dir * .9, s * .9); ctx.rotate(-.1);
+  ctx.fillStyle = "#ffcf3a"; ctx.strokeStyle = "#5a3a00"; ctx.lineWidth = 3; ctx.lineJoin = "round";
+  ctx.beginPath(); ctx.moveTo(-18, 8); ctx.lineTo(-20, -14); ctx.lineTo(-9, -4); ctx.lineTo(0, -20); ctx.lineTo(9, -4); ctx.lineTo(20, -14); ctx.lineTo(18, 8); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#e8302a"; ctx.beginPath(); ctx.arc(0, -2, 3.6, 0, 7); ctx.fill(); ctx.fillStyle = "#4aa8ff"; ctx.beginPath(); ctx.arc(-11, 1, 2.6, 0, 7); ctx.arc(11, 1, 2.6, 0, 7); ctx.fill();
+  ctx.restore();
+  if (c.bm === "tele") { ctx.save(); ctx.translate(c.x, c.y - 115 * s + Math.sin(t * 24) * 3); ctx.fillStyle = "#ff3b2f"; ctx.strokeStyle = "#fff"; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(0, -30); ctx.lineTo(32, 26); ctx.lineTo(-32, 26); ctx.closePath(); ctx.fill(); ctx.stroke(); txt(c.atk === "dive" ? "STURZ!" : "!", 0, 8, c.atk === "dive" ? 18 : 34, "center"); ctx.restore(); }
+  if (c.bm === "stun") for (let i = 0; i < 3; i++) { const a = t * 4 + i * 2.1; ctx.fillStyle = "#ffe14d"; ctx.strokeStyle = "#7a5a00"; ctx.lineWidth = 2; ctx.beginPath(); for (let k = 0; k < 10; k++) { const r = k % 2 ? 6 : 14, an = k * Math.PI / 5; ctx.lineTo(c.x + Math.cos(a) * 70 * s * .6 + Math.cos(an) * r, c.y - 60 * s + Math.sin(a) * 14 + Math.sin(an) * r); } ctx.closePath(); ctx.fill(); ctx.stroke(); }
+}
+function drawEgg(e) {
+  ctx.save(); ctx.translate(e.x, e.y); ctx.scale(e.s, e.s);
+  const bomb = e.type === "bomb", pulse = .5 + .5 * Math.sin(t * 14);
+  ctx.strokeStyle = `rgba(255,60,50,${.35 + pulse * .4})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0, 0, e.r * 1.9, 0, 7); ctx.stroke();
+  ctx.rotate(e.rot); ctx.lineWidth = 3; ctx.strokeStyle = "#2a1408"; ctx.lineJoin = "round";
+  if (bomb) { ctx.shadowColor = "rgba(255,140,30,.9)"; ctx.shadowBlur = 22; }
+  const g = ctx.createRadialGradient(-e.r * .3, -e.r * .4, 2, 0, 0, e.r * 1.5);
+  if (bomb) { g.addColorStop(0, "#ffb347"); g.addColorStop(.5, "#d63a1c"); g.addColorStop(1, "#5a0f08"); } else { g.addColorStop(0, "#ffffff"); g.addColorStop(.6, "#f1e6c9"); g.addColorStop(1, "#c9b88a"); }
+  ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(0, 0, e.r * .88, e.r * 1.15, 0, 0, 7); ctx.fill(); ctx.stroke(); ctx.shadowBlur = 0;
+  if (bomb) { ctx.strokeStyle = "rgba(0,0,0,.45)"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-6, -14); ctx.lineTo(0, -4); ctx.lineTo(-7, 4); ctx.lineTo(2, 14); ctx.stroke(); }
+  else { ctx.fillStyle = "rgba(255,255,255,.7)"; ctx.beginPath(); ctx.ellipse(-e.r * .3, -e.r * .45, e.r * .2, e.r * .35, -.4, 0, 7); ctx.fill(); ctx.fillStyle = "rgba(0,0,0,.12)"; for (const [a, b] of [[5, 4], [-4, 9], [7, -6]]) { ctx.beginPath(); ctx.arc(a, b, 1.8, 0, 7); ctx.fill(); } }
+  if (e.flash > 0) { ctx.fillStyle = `rgba(255,255,255,${e.flash * 4})`; ctx.beginPath(); ctx.ellipse(0, 0, e.r * .88, e.r * 1.15, 0, 0, 7); ctx.fill(); }
+  ctx.restore();
+}
+function drawSplats() {
+  for (const s of splats) {
+    ctx.save(); ctx.globalAlpha = Math.min(1, s.life * 1.2); ctx.translate(s.x, s.y + (4.5 - s.life) * 10);
+    ctx.fillStyle = "rgba(255,248,225,.92)"; ctx.beginPath(); for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6, r = s.r * (.75 + .3 * Math.sin(i * 2.3 + s.seed)); ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r); } ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#ffc21a"; ctx.beginPath(); ctx.arc(s.r * .1, 0, s.r * .38, 0, 7); ctx.fill(); ctx.fillStyle = "rgba(255,255,255,.55)"; ctx.beginPath(); ctx.arc(-s.r * .05, -s.r * .12, s.r * .1, 0, 7); ctx.fill();
+    ctx.fillStyle = "rgba(255,248,225,.92)"; ctx.fillRect(-4, s.r * .5, 8, (4.5 - s.life) * 26); ctx.restore();
+  }
+}
 
 function drawChick(c) {
   const s = c.s, fl = c.dead ? .6 : Math.sin(c.ph);
@@ -555,17 +655,19 @@ function draw() {
   for (let i = 0; i < 5; i++) { const bx = ((t * 16 + i * 130) % (W + 80)) - 40, by = 250 + i * 34 + Math.sin(t * 2 + i) * 6, fl = Math.sin(t * 9 + i) * 4; ctx.beginPath(); ctx.moveTo(bx - 9, by - 3 + fl); ctx.quadraticCurveTo(bx - 4, by + 1, bx, by); ctx.quadraticCurveTo(bx + 4, by + 1, bx + 9, by - 3 + fl); ctx.stroke(); }
   ctx.lineCap = "butt";
   for (let i = 0; i < 4; i++) cloud(((i * 230 + t * (7 + i * 3)) % (W + 300)) - 150, 120 + i * 78 + (i % 2) * 20, .8 + i * .12);
-  chickens.forEach(c => c.li === 0 && drawChicken(c));
+  chickens.forEach(c => c.li === 0 && c.sp !== "boss" && drawChicken(c));
   ctx.drawImage(BG.hills, 0, 0, W, H);
   drawMill();
-  chickens.forEach(c => c.li === 1 && drawChicken(c));
+  chickens.forEach(c => c.li === 1 && c.sp !== "boss" && drawChicken(c));
   ctx.drawImage(BG.meadow, 0, 0, W, H);
-  chickens.forEach(c => c.li === 2 && drawChicken(c));
+  chickens.forEach(c => c.li === 2 && c.sp !== "boss" && drawChicken(c));
   ctx.drawImage(BG.fence, 0, 0, W, H);
   // schwingendes Gras vorne
   ctx.fillStyle = "#2f8f36";
   for (let x = -6; x < W + 10; x += 14) { const h = 20 + (x * 7 % 13), sw = Math.sin(t * 2 + x * .1) * 5; ctx.beginPath(); ctx.moveTo(x, 966); ctx.quadraticCurveTo(x + 2 + sw * .5, 966 - h * .6, x + 4 + sw, 966 - h); ctx.lineTo(x + 8, 966); ctx.fill(); }
   if (state === "play") drawGun();
+  chickens.forEach(c => c.sp === "boss" && drawChicken(c));
+  eggs.forEach(drawEgg);
   // Funken
   for (const sp of sparks) { ctx.globalAlpha = Math.max(0, sp.life * 1.6); ctx.fillStyle = "#fff3a8"; ctx.beginPath(); ctx.arc(sp.x, sp.y, 2.4, 0, 7); ctx.fill(); }
   ctx.globalAlpha = 1;
@@ -584,6 +686,8 @@ function draw() {
   if (pg > 0) { ctx.globalCompositeOperation = "multiply"; ctx.fillStyle = `rgba(255,${200 - pg * 70 | 0},${170 - pg * 100 | 0},${pg * .5})`; ctx.fillRect(0, 0, W, H); ctx.globalCompositeOperation = "source-over"; }
   ctx.restore();
   ctx.drawImage(BG.vig, 0, 0, W, H);
+  drawSplats();
+  if (redFlash > 0) { const g = ctx.createRadialGradient(W / 2, H / 2, H * .25, W / 2, H / 2, H * .7); g.addColorStop(0, "rgba(255,30,30,0)"); g.addColorStop(1, `rgba(255,30,30,${Math.min(.75, redFlash * 1.1)})`); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); }
   hud();
   if (state === "play") crosshair();
 }
@@ -608,9 +712,9 @@ function hud() {
   ctx.lineWidth = 7; ctx.strokeStyle = "rgba(255,255,255,.15)"; ctx.beginPath(); ctx.arc(cx, cy, 31, 0, 7); ctx.stroke();
   ctx.strokeStyle = low ? "#ff5a3d" : "#6fe07a"; ctx.lineCap = "round"; ctx.beginPath(); ctx.arc(cx, cy, 31, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * frac); ctx.stroke(); ctx.lineCap = "butt";
   txt(String(tl), cx, cy + 1, low ? 34 + Math.sin(t * 12) * 2 : 32, "center", low ? "#ff8a6a" : "#fff7e0");
-  if (curM.lives) for (let i = 0; i < 3; i++) heart(W / 2 - 40 + i * 40, 44, 14, i < lives);
+  if (curM.lives || curM.hearts) for (let i = 0; i < 3; i++) heart(W / 2 - 40 + i * 40, 44, 14, i < lives);
   const boss = chickens.find(c => c.sp === "boss" && !c.dead);
-  if (boss && state === "play") { plate(60, 112, 420, 26, 13); ctx.fillStyle = "rgba(14,22,40,.7)"; ctx.fill(); plate(64, 116, Math.max(10, 412 * boss.hp / boss.maxhp), 18, 9); ctx.fillStyle = boss.enraged ? "#ff3a2a" : "#ff9a1c"; ctx.fill(); txt("BOSS-HAHN", W / 2, 98, 20, "center", "#ffcf3a"); }
+  if (boss && state === "play") { plate(60, 112, 420, 26, 13); ctx.fillStyle = "rgba(14,22,40,.7)"; ctx.fill(); plate(64, 116, Math.max(10, 412 * boss.hp / boss.maxhp), 18, 9); ctx.fillStyle = boss.enraged ? "#ff3a2a" : "#ff9a1c"; ctx.fill(); txt(boss.bm === "stun" ? "BETÄUBT  x2" : "BOSS-HAHN", W / 2, 98, 20, "center", boss.bm === "stun" ? "#ffe14d" : "#ffcf3a"); }
   if (state === "play" && combo >= 3) { const mult = 1 + Math.min(3, Math.floor(combo / 5)), sc = 1 + Math.sin(t * 10) * .04; ctx.save(); ctx.translate(W / 2, curM.boss ? 172 : 104); ctx.scale(sc, sc); plate(-82, -18, 164, 36, 18); ctx.fillStyle = mult > 1 ? "#ff8a1c" : "#e8452e"; ctx.fill(); ctx.strokeStyle = "#fff"; ctx.lineWidth = 2.5; ctx.stroke(); txt(`SERIE ${combo}${mult > 1 ? "  ·  x" + mult : ""}`, 0, 1, 22, "center"); ctx.restore(); }
   // Munition
   const sp = Math.min(20, 300 / MAG), bw = Math.min(11, sp - 2);
@@ -630,7 +734,9 @@ function crosshair() {
     ctx.strokeStyle = col; ctx.lineWidth = w; ctx.beginPath(); ctx.arc(0, 0, r, 0, 7);
     [[-1, 0], [1, 0], [0, -1], [0, 1]].forEach(([a, b]) => { ctx.moveTo(a * (r - 6), b * (r - 6)); ctx.lineTo(a * (r + 12), b * (r + 12)); }); ctx.stroke();
   }
-  ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(0, 0, 3, 0, 7); ctx.fill(); ctx.restore();
+  ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(0, 0, 3, 0, 7); ctx.fill();
+  if (hitMark > 0) { const k = hitMark / .2, o = 8 + (1 - k) * 8; ctx.strokeStyle = `rgba(255,255,255,${k})`; ctx.lineWidth = 4; ctx.beginPath(); for (const [a, b] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { ctx.moveTo(a * o, b * o); ctx.lineTo(a * (o + 9), b * (o + 9)); } ctx.stroke(); }
+  ctx.restore();
 }
 function drawMill() {
   const x = MX, y = MY;
