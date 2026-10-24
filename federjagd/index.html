@@ -25,6 +25,13 @@
   .leg { background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12); border-radius:14px; padding:6px 4px 8px; font-size:clamp(12px,3.4vw,16px); line-height:1.15; }
   .leg canvas { width:72px; height:60px; display:block; margin:0 auto 2px; }
   .leg b { display:block; color:var(--gold); font-weight:400; } .leg.bad b { color:#ff7a6a; }
+  #modes { display:flex; flex-direction:column; gap:8px; width:min(92%,440px); }
+  .mode { background:rgba(255,255,255,.08); border:2px solid rgba(255,255,255,.14); border-radius:16px; padding:8px 12px; text-align:left; display:flex; align-items:center; gap:10px; cursor:pointer; }
+  .mode.sel { border-color:var(--gold); background:rgba(255,207,58,.16); box-shadow:0 0 0 2px rgba(255,207,58,.3); }
+  .mode .ic { font-size:26px; width:34px; text-align:center; }
+  .mode b { display:block; font-weight:400; color:var(--gold); font-size:clamp(17px,4.8vw,22px); }
+  .mode small { display:block; font-family:system-ui,sans-serif; font-size:clamp(11px,3.1vw,13px); opacity:.85; line-height:1.25; }
+  .mode i { margin-left:auto; font-style:normal; text-align:right; font-size:clamp(11px,3vw,13px); color:var(--gold); white-space:nowrap; line-height:1.2; }
   .row { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
   button.sec { background:linear-gradient(#5d7699,#3a4f6e); color:#fff; box-shadow:0 6px 0 #1c2a40, 0 12px 22px rgba(0,0,0,.45), inset 0 2px 0 rgba(255,255,255,.3); }
   #shop { justify-content:flex-start; padding-top:3.5%; gap:8px; }
@@ -56,16 +63,21 @@
   <button id="reload">Nachladen (R)</button>
   <div class="ov" id="start">
     <h1>FEDER<br>JAGD</h1>
-    <p>90 Sekunden, 6 Schuss. Je kleiner und weiter weg, desto mehr Punkte. Treffer in Folge geben Bonus.</p>
-    <div class="legend" id="legend"></div>
-    <p style="opacity:.8">Tippen = Schiessen. Leer? Nachladen-Knopf oder nochmal tippen.</p>
+    <div id="modes"></div>
     <div class="row"><button id="go">Los geht's</button><button id="shopbtn" class="sec">Waffen</button></div>
+    <div class="row"><button id="infobtn" class="sec sm">Vögel</button></div>
     <p id="hi" style="opacity:.8"></p>
   </div>
   <div class="ov off" id="end">
     <h1 id="end-h">Zeit um!</h1>
     <p id="end-t"></p>
-    <div class="row"><button id="again">Nochmal</button><button id="shopbtn2" class="sec">Waffen</button></div>
+    <div class="row"><button id="again">Nochmal</button><button id="shopbtn2" class="sec">Waffen</button><button id="menubtn" class="sec">Modi</button></div>
+  </div>
+  <div class="ov off" id="info">
+    <h1 style="font-size:clamp(34px,10vw,56px)">VÖGEL</h1>
+    <div class="legend" id="legend"></div>
+    <p>Je kleiner und weiter weg, desto mehr Punkte. Treffer in Folge geben bis zu x4. Fehlschuss setzt die Serie zurück.</p>
+    <button id="info-back">Zurück</button>
   </div>
   <div class="ov off" id="shop">
     <h1 style="font-size:clamp(34px,10vw,56px)">ARSENAL</h1>
@@ -77,7 +89,8 @@
 
 <script>
 "use strict";
-const W = 540, H = 960, ROUND = 90;
+const W = 540, H = 960;
+let ROUND = 90;
 let MAG = 6, RELOAD = 1.0;
 const DPR = Math.min(2, window.devicePixelRatio || 1);
 const cv = document.getElementById("c"); let ctx = cv.getContext("2d");
@@ -95,8 +108,9 @@ const LAYERS = [
 const MX = 400, MY = 565;
 
 const SAVE_KEY = "federjagd.save.v2";
-let save = { best: 0, coins: 0, owned: ["shotgun"], sel: "shotgun", up: {} };
+let save = { best: 0, coins: 0, owned: ["shotgun"], sel: "shotgun", up: {}, bests: {}, mode: "classic" };
 try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s) save = Object.assign(save, s); else { const b = +localStorage.getItem("federjagd.best"); if (b) save.best = b; } } catch (e) {}
+if (save.best && !save.bests.classic) save.bests.classic = save.best;
 const persist = () => { try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {} };
 
 // ---------- Waffen ----------
@@ -116,27 +130,49 @@ let curW;
 function applyWeapon() { if (!save.owned.includes(save.sel)) save.sel = "shotgun"; const s = wstats(save.sel); curW = Object.assign({ id: save.sel }, WP[save.sel], { radEff: s.rad }); MAG = s.mag; RELOAD = s.reload; }
 applyWeapon();
 let recoil = 0, muzzle = 0, shotCd = 0, holding = false, tracers = [], smoke = [], shells = [];
-function refreshMenu() { $("hi").textContent = `Rekord ${save.best} · ${save.coins} Münzen · ${WP[save.sel].name}`; }
+const MODES = {
+  classic:  { name: "Klassik",       ic: "🎯", desc: "90 Sekunden. Sammle so viele Punkte wie möglich.", round: 90, swarm: 30 },
+  blitz:    { name: "Blitz",         ic: "⚡", desc: "Nur 45 Sekunden, doppelt so viele Vögel, Punkte x1,5.", round: 45, swarm: 15, spawnMul: .5, cap: 20, scoreMul: 1.5 },
+  survival: { name: "Überleben",     ic: "❤️", desc: "Endlos mit 3 Herzen. Ein Rabe kostet ein Herz.", round: 600, swarm: 40, lives: 3 },
+  boss:     { name: "Boss-Hahn",     ic: "👑", desc: "Besiege den Riesenhahn in 75 Sekunden.", round: 75, boss: true },
+  sniper:   { name: "Scharfschütze", ic: "🔭", desc: "10 Schuss, kein Nachladen. Jeder Treffer gibt einen Schuss zurück. Punkte x2.", round: 120, sniper: true, scoreMul: 2 },
+};
+const MODE_ORDER = ["classic", "blitz", "survival", "boss", "sniper"];
+let mode = MODES[save.mode] ? save.mode : "classic", curM = MODES[mode];
+const bestOf = m => save.bests[m] || 0;
+function refreshMenu() { $("hi").textContent = `${save.coins} Münzen · ${WP[save.sel].name}`; }
+function renderModes() {
+  const box = $("modes"); box.innerHTML = "";
+  for (const id of MODE_ORDER) {
+    const m = MODES[id], d = document.createElement("div"); d.className = "mode" + (mode === id ? " sel" : "");
+    d.innerHTML = `<span class="ic">${m.ic}</span><span><b>${m.name}</b><small>${m.desc}</small></span><i>Rekord<br>${bestOf(id)}</i>`;
+    d.onclick = () => { mode = id; curM = m; save.mode = id; persist(); renderModes(); };
+    box.appendChild(d);
+  }
+}
 refreshMenu();
 
 let state = "menu", score = 0, timeLeft = ROUND, ammo = MAG, reloadT = 0, chickens = [], feathers = [], pops = [], rings = [], sparks = [], spawnT = 0;
 let mouse = { x: W / 2, y: H * .55 }, flash = 0, shake = 0, t = 0, kick = 0, hitStop = 0;
-let mill = { spin: 0.6, boost: 0 }, combo = 0, hits = 0, shots = 0, banner = { txt: "", life: 0 }, swarmQ = 0, swarmT = 0, sw1 = false, sw2 = false;
-const diff = () => state === "play" ? Math.min(1, (ROUND - timeLeft) / 70) : 0;
+let mill = { spin: 0.6, boost: 0 }, combo = 0, hits = 0, shots = 0, banner = { txt: "", life: 0 }, swarmQ = 0, swarmT = 0, lives = 0, swarmNext = 0, swarmN = 0, endDelay = 0, bossWon = false, bossT = 0;
+const diff = () => state === "play" ? Math.min(1, (ROUND - timeLeft) / (ROUND <= 100 ? ROUND * .78 : 70)) : 0;
 const prog = () => state === "menu" ? 0 : Math.min(1, (ROUND - timeLeft) / ROUND);
 
 function start() {
-  applyWeapon(); state = "play"; score = 0; timeLeft = ROUND; ammo = MAG; reloadT = 0; chickens = []; feathers = []; pops = []; rings = []; sparks = []; spawnT = 0; combo = 0; hits = 0; shots = 0; banner.life = 0; swarmQ = 0; sw1 = sw2 = false; holding = false; shotCd = 0; recoil = 0; muzzle = 0; tracers = []; smoke = []; shells = [];
+  applyWeapon(); curM = MODES[mode]; ROUND = curM.round; if (curM.sniper) MAG = 10; state = "play"; score = 0; timeLeft = ROUND; ammo = MAG; reloadT = 0; chickens = []; feathers = []; pops = []; rings = []; sparks = []; spawnT = 0; combo = 0; hits = 0; shots = 0; banner.life = 0; swarmQ = 0; swarmN = 0; swarmNext = curM.swarm || 0; endDelay = 0; bossWon = false; bossT = 2; lives = curM.lives || 0; holding = false; shotCd = 0; recoil = 0; muzzle = 0; tracers = []; smoke = []; shells = [];
+  if (curM.boss) spawnBoss(); $("reload").style.display = curM.sniper ? "none" : "";
   $("start").classList.add("off"); $("end").classList.add("off");
 }
 function finish() {
   state = "over"; holding = false;
-  const isBest = score > save.best;
-  if (isBest) save.best = score;
+  const isBest = score > bestOf(mode);
+  if (isBest) save.bests[mode] = score;
   save.coins += score; persist(); refreshMenu();
-  $("end-h").textContent = isBest ? "Neuer Rekord!" : "Zeit um!";
-  const acc = shots ? Math.round(hits / shots * 100) : 0;
-  $("end-t").textContent = `${score} Punkte (= +${score} Münzen) · ${hits} Treffer · ${acc} % Trefferquote · Rekord ${save.best}`;
+  let h = "Zeit um!";
+  if (curM.lives) h = "Alle Herzen weg!"; else if (curM.sniper && ammo <= 0) h = "Munition leer!"; else if (curM.boss) h = bossWon ? "Boss besiegt!" : "Der Boss entkommt!";
+  $("end-h").textContent = isBest && score > 0 ? "Neuer Rekord!" : h;
+  const acc = shots ? Math.round(hits / shots * 100) : 0, secs = Math.max(0, Math.floor(ROUND - timeLeft));
+  $("end-t").textContent = `${curM.name}: ${score} Punkte (= +${score} Münzen) · ${hits} Treffer · ${acc} % Trefferquote${curM.lives ? " · " + secs + " s überlebt" : ""} · Rekord ${bestOf(mode)}`;
   $("end").classList.remove("off");
 }
 
@@ -167,8 +203,10 @@ const PAL = {
   crow:    { base: ["#5a6580", "#232733", "#0e1018"], wing: ["#2f3446", "#0e1018"], belly: "#3a4260", collar: "#2f3446", head: ["#5a6580", "#161923"], tails: ["#1b1f2b", "#232733", "#0e1018"], comb: null, beak: ["#9aa0ae", "#6f7585"], eye: "#ff3b2f", cs: 0 },
   clock:   { base: ["#9fe6f4", "#2f9bb8", "#16607a"], wing: ["#4fb0cc", "#1c6b86"], belly: "#d8f6ff", collar: "#9be4f2", head: ["#b8f0fa", "#2f9bb8"], tails: ["#ffd84a", "#4fb0cc", "#1c6b86"], comb: "#ffb11c", cs: 1, skin: "#ffb11c", clock: true, glow: "rgba(120,230,255,.7)" },
 };
+PAL.boss = Object.assign({}, PAL.rooster, { glow: "rgba(255,70,40,.55)", cs: 1.8 });
+function spawnBoss() { spawn("boss"); const c = chickens[chickens.length - 1]; c.x = W / 2; c.y = c.y0 = 330; c.vx = 95; c.amp = 45; c.fq = 1.2; c.flap = 7; }
 function pickSpecies() {
-  const el = ROUND - timeLeft, r = Math.random();
+  const el = (ROUND - timeLeft) * (90 / Math.min(ROUND, 90)), r = Math.random();
   if (r < .04) return "gold";
   if (r < .075) return "clock";
   if (el > 4 && r < .19) return "crow";
@@ -177,12 +215,13 @@ function pickSpecies() {
   return "hen";
 }
 function spawn(sp = pickSpecies()) {
-  const d = diff(), mul = 1 + .5 * d, dir = Math.random() < .5 ? 1 : -1;
+  const d = diff(), mul = 1 + .5 * d + (mode === "survival" ? Math.max(0, Math.min(.6, (ROUND - timeLeft - 70) / 150)) : 0), dir = Math.random() < .5 ? 1 : -1;
   let li = (Math.random() * 3) | 0, k = { pts: 0, hp: 1, hx: 36, hy: 28, sp: 1, sc: 1, amp: 0, fq: 0, dash: 0 };
   if (sp === "gold") { li = 0; k.sp = 1.7; k.pts = 50; k.sc = 1.15; k.amp = 45; k.fq = 3; }
   else if (sp === "clock") { li = 1; k.sp = 1.2; k.pts = 10; k.amp = 50; k.fq = 2.5; }
   else if (sp === "chick") { li = 1 + ((Math.random() * 2) | 0); k.sp = 1.5; k.pts = 40; k.hx = 24; k.hy = 24; k.sc = 1.15; k.amp = rnd(70, 110); k.fq = rnd(4, 6); }
   else if (sp === "rooster") { li = 1 + ((Math.random() * 2) | 0); k.sp = .7; k.pts = 40; k.hp = 2; k.sc = 1.3; k.hx = 42; k.hy = 32; k.dash = 1; }
+  else if (sp === "boss") { li = 1; k.sp = 0; k.hp = 45; k.hx = 44; k.hy = 34; k.sc = 2.63; k.pts = 100; }
   else if (sp === "crow") { k.sp = 1.35; k.sc = 1.05; k.hx = 34; k.hy = 24; if (Math.random() < .5) { k.amp = 30; k.fq = 2.5; } }
   else { k.pts = LAYERS[li].pts; if (Math.random() < .3 + d * .3) { k.amp = rnd(30, 70); k.fq = rnd(2, 3.4); } }
   const L = LAYERS[li], y0 = rnd(L.y[0], L.y[1]);
@@ -229,23 +268,41 @@ function hitChicken(c, dmg = 1) {
   const dark = c.sp === "crow";
   if (!dark) hits++;
   c.hp -= dmg;
+  if (!dark && curM.sniper) ammo = Math.min(MAG, ammo + 1);
+  if (c.sp === "boss") {
+    combo++; const bp = 10 * (1 + Math.min(3, Math.floor(combo / 5))) * dmg; score += bp;
+    pops.push({ x: c.x + rnd(-40, 40), y: c.y - 60 * c.s * .5, txt: "+" + bp, life: .8, col: "#fff" });
+    if (c.hp > 0 && c.hp <= c.maxhp / 2 && !c.enraged) { c.enraged = true; c.vx *= 1.6; banner = { txt: "WUTANFALL!", life: 1.5 }; sfx("swarm"); }
+  }
   const burst = (n, cols) => { for (let i = 0; i < n; i++) feathers.push({ x: c.x, y: c.y, vx: rnd(-220, 220), vy: rnd(-260, 60), r: rnd(0, 6), life: rnd(.8, 1.6), col: cols[(Math.random() * cols.length) | 0], sz: rnd(.8, 1.4) * c.s + .3 }); };
-  if (c.hp > 0) { c.flash = .25; burst(8, ["#f2e3c0", "#ff9a4a"]); rings.push({ x: c.x, y: c.y, r: 6, life: .25, col: "255,255,255" }); pops.push({ x: c.x, y: c.y - 40 * c.s, txt: "Au!", life: .7, col: "#ffd0a0" }); sfx("hit"); shake = 6; hitStop = .04; return; }
+  if (c.hp > 0) { c.flash = .25; burst(8, ["#f2e3c0", "#ff9a4a"]); rings.push({ x: c.x, y: c.y, r: 6, life: .25, col: "255,255,255" }); pops.push({ x: c.x, y: c.y - 40 * c.s, txt: c.sp === "boss" ? "" : "Au!", life: .7, col: "#ffd0a0" }); sfx("hit"); shake = 6; hitStop = .04; return; }
   c.dead = true; c.vy = -160; c.vx *= .3;
   if (dark) {
     score = Math.max(0, score - 20); combo = 0; shake = 14;
     pops.push({ x: c.x, y: c.y - 34 * c.s, txt: "-20", life: 1.1, col: "#ff6a5a", big: true });
-    rings.push({ x: c.x, y: c.y, r: 6, life: .4, col: "255,90,70" }); burst(18, ["#2f3446", "#5a6580", "#161923"]); sfx("bad"); return;
+    rings.push({ x: c.x, y: c.y, r: 6, life: .4, col: "255,90,70" }); burst(18, ["#2f3446", "#5a6580", "#161923"]); sfx("bad");
+    if (curM.lives) { lives--; pops.push({ x: c.x, y: c.y - 70 * c.s, txt: "-1 Herz", life: 1.2, col: "#ff8a9a", big: true }); if (lives <= 0 && endDelay <= 0) endDelay = 1; }
+    return;
+  }
+  if (c.sp === "boss") {
+    bossWon = true; const bonus = 400 + Math.floor(timeLeft) * 5; score += bonus; endDelay = 1.7; banner = { txt: "BOSS BESIEGT!", life: 2 };
+    pops.push({ x: c.x, y: c.y - 90, txt: "+" + bonus, life: 1.6, col: "#ffe066", big: true });
+    for (let i = 0; i < 70; i++) feathers.push({ x: c.x + rnd(-60, 60), y: c.y + rnd(-40, 40), vx: rnd(-300, 300), vy: rnd(-340, 80), r: rnd(0, 6), life: rnd(1, 2), col: ["#e0803a", "#ffcf3a", "#2a5fb0", "#ff4a3a"][(Math.random() * 4) | 0], sz: rnd(1, 1.8) });
+    rings.push({ x: c.x, y: c.y, r: 10, life: .6, col: "255,200,80" }); sfx("gold"); shake = 18; return;
   }
   combo++;
-  const mult = 1 + Math.min(3, Math.floor(combo / 5)), p = c.pts * mult; score += p;
+  const mult = 1 + Math.min(3, Math.floor(combo / 5)), p = Math.round(c.pts * mult * (curM.scoreMul || 1)); score += p;
   pops.push({ x: c.x, y: c.y - 34 * c.s, txt: "+" + p + (mult > 1 ? " x" + mult : ""), life: 1, col: c.gold ? "#ffe066" : "#fff", big: c.gold || mult > 1 });
-  if (c.sp === "clock") { timeLeft += 4; pops.push({ x: c.x, y: c.y - 74 * c.s, txt: "+4 s", life: 1.2, col: "#8fe9ff", big: true }); }
+  if (c.sp === "clock") {
+    const tx = curM.lives ? "+1 Herz" : curM.sniper ? "+3 Schuss" : "+4 s";
+    if (curM.lives) lives = Math.min(3, lives + 1); else if (curM.sniper) ammo = Math.min(MAG, ammo + 3); else timeLeft += 4;
+    pops.push({ x: c.x, y: c.y - 74 * c.s, txt: tx, life: 1.2, col: "#8fe9ff", big: true });
+  }
   rings.push({ x: c.x, y: c.y, r: 6, life: .35, col: c.gold ? "255,220,80" : "255,255,255" });
   burst(c.gold ? 26 : 16, c.gold ? ["#ffd84a", "#fff3b0"] : c.sp === "chick" ? ["#ffe14d", "#fff3b0"] : c.sp === "rooster" ? ["#e0803a", "#ffcf3a", "#2a5fb0"] : c.sp === "clock" ? ["#9be4f2", "#ffd84a"] : ["#c4733a", "#f2e3c0", "#6b3f23"]);
   hitStop = Math.max(hitStop, .06); shake = Math.max(shake, 9); sfx(c.gold || c.sp === "clock" ? "gold" : "hit");
 }
-function reload() { if (reloadT > 0 || ammo === MAG) return; reloadT = RELOAD; sfx("click"); }
+function reload() { if (curM.sniper || reloadT > 0 || ammo === MAG) return; reloadT = RELOAD; sfx("click"); }
 
 // ---------- Update ----------
 function update(dt) {
@@ -272,19 +329,25 @@ function update(dt) {
   }
   if (state !== "play") { for (const c of chickens) stepChicken(c, dt); chickens = chickens.filter(c => c.x > -160 && c.x < W + 160 && c.y < H + 100); return; }
 
+  if (curM.sniper) { if (ammo <= 0 && endDelay <= 0) endDelay = 1.4; else if (ammo > 0) endDelay = 0; }
+  if (endDelay > 0) { endDelay -= dt; if (endDelay <= 0) { finish(); return; } }
   timeLeft -= dt;
   if (timeLeft <= 0) { timeLeft = 0; finish(); return; }
   if (reloadT > 0) { reloadT -= dt; if (reloadT <= 0) { ammo = MAG; sfx("ready"); } }
-  if (!sw1 && timeLeft <= 60) { sw1 = true; swarmQ = 9; banner = { txt: "SCHWARM!", life: 1.8 }; sfx("swarm"); }
-  if (!sw2 && timeLeft <= 30) { sw2 = true; swarmQ = 14; banner = { txt: "GROSSER SCHWARM!", life: 1.8 }; sfx("swarm"); }
+  if (swarmNext && ROUND - timeLeft >= swarmNext) { swarmNext += curM.swarm; swarmN++; swarmQ = Math.min(20, 6 + 3 * swarmN); banner = { txt: swarmN > 1 ? "GROSSER SCHWARM!" : "SCHWARM!", life: 1.8 }; sfx("swarm"); }
   if (swarmQ > 0) { swarmT -= dt; if (swarmT <= 0) { spawn(Math.random() < .25 ? "chick" : "hen"); swarmQ--; swarmT = .17; } }
   if (holding && curW.auto) shoot(mouse.x, mouse.y);
   spawnT -= dt; const d = diff();
-  if (spawnT <= 0 && chickens.length < 16) { spawn(); spawnT = rnd(.3, 1.0) * (1.25 - .55 * d); }
+  if (curM.boss) { bossT -= dt; if (bossT <= 0 && chickens.length < 9) { spawn(Math.random() < .3 ? "chick" : "hen"); bossT = rnd(1.6, 2.6); } }
+  else if (spawnT <= 0 && chickens.length < (curM.cap || 16)) { spawn(); spawnT = rnd(.3, 1.0) * (1.25 - .55 * d) * (curM.spawnMul || 1); }
   for (const c of chickens) stepChicken(c, dt);
   chickens = chickens.filter(c => c.x > -160 && c.x < W + 160 && c.y < H + 100);
 }
 function stepChicken(c, dt) {
+  if (!c.dead && c.sp === "boss") {
+    c.x += c.vx * dt; if (c.x < 100) c.vx = Math.abs(c.vx); if (c.x > W - 100) c.vx = -Math.abs(c.vx); c.dir = c.vx > 0 ? 1 : -1;
+    c.t2 += dt; c.ph += dt * c.flap; c.y = c.y0 + Math.sin(c.t2 * c.fq) * c.amp; return;
+  }
   if (c.dead) { c.vy += 950 * dt; c.y += c.vy * dt; c.x += c.vx * dt; c.rot += dt * 9 * c.dir; return; }
   c.t2 += dt; c.ph += dt * c.flap * c.bob;
   const m = c.dash ? 1 + .9 * Math.max(0, Math.sin(c.t2 * 1.6)) : 1;
@@ -437,7 +500,7 @@ function drawBird(c, P) {
   ctx.restore();
   if (c.flash > 0) { ctx.fillStyle = `rgba(255,255,255,${Math.min(.85, c.flash * 4)})`; ctx.beginPath(); ctx.ellipse(0, 4, 33, 22, 0, 0, 7); ctx.arc(31, -15, 13.5, 0, 7); ctx.fill(); }
   ctx.restore();
-  if (c.maxhp > 1 && !c.dead) { ctx.save(); ctx.translate(c.x, c.y - 52 * s); for (let i = 0; i < c.maxhp; i++) { ctx.fillStyle = i < c.hp ? "#ff4a4a" : "rgba(0,0,0,.4)"; ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc((i - (c.maxhp - 1) / 2) * 16, 0, 6, 0, 7); ctx.fill(); ctx.stroke(); } ctx.restore(); }
+  if (c.maxhp > 1 && !c.dead && c.sp !== "boss") { ctx.save(); ctx.translate(c.x, c.y - 52 * s); for (let i = 0; i < c.maxhp; i++) { ctx.fillStyle = i < c.hp ? "#ff4a4a" : "rgba(0,0,0,.4)"; ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc((i - (c.maxhp - 1) / 2) * 16, 0, 6, 0, 7); ctx.fill(); ctx.stroke(); } ctx.restore(); }
   if (c.sp === "crow" && !c.dead) { ctx.save(); ctx.translate(c.x, c.y - 50 * s + Math.sin(t * 8) * 2); ctx.fillStyle = "#ff3b2f"; ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, -11); ctx.lineTo(11, 9); ctx.lineTo(-11, 9); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.fillStyle = "#fff"; ctx.font = `13px ${FONT}`; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("!", 0, 3); ctx.restore(); }
 }
 
@@ -525,6 +588,10 @@ function draw() {
   if (state === "play") crosshair();
 }
 
+function heart(x, y, r, full) {
+  ctx.save(); ctx.translate(x, y); ctx.beginPath(); ctx.moveTo(0, r * .9); ctx.bezierCurveTo(-r * 1.5, -r * .2, -r * .7, -r * 1.2, 0, -r * .35); ctx.bezierCurveTo(r * .7, -r * 1.2, r * 1.5, -r * .2, 0, r * .9);
+  ctx.fillStyle = full ? "#ff4a5e" : "rgba(255,255,255,.18)"; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = "#2a1200"; ctx.lineJoin = "round"; ctx.stroke(); ctx.restore();
+}
 function plate(x, y, w, h, r) {
   ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
 }
@@ -536,12 +603,15 @@ function hud() {
   plate(12, 12, 170, 62, 18); ctx.fillStyle = "rgba(14,22,40,.62)"; ctx.fill(); ctx.strokeStyle = "#ffcf3a"; ctx.lineWidth = 3; ctx.stroke();
   txt("PUNKTE", 28, 29, 14, "left", "#ffcf3a", "rgba(0,0,0,0)"); txt(String(score).padStart(4, "0"), 28, 54, 36, "left");
   // Zeit-Ring
-  const cx = W - 48, cy = 46, tl = Math.ceil(timeLeft), frac = Math.min(1, timeLeft / ROUND), low = tl <= 10;
+  const surv = !!curM.lives, cx = W - 48, cy = 46, tl = surv ? Math.max(0, Math.floor(ROUND - timeLeft)) : Math.ceil(timeLeft), frac = surv ? ((ROUND - timeLeft) % 60) / 60 : Math.min(1, timeLeft / ROUND), low = !surv && tl <= 10;
   ctx.fillStyle = "rgba(14,22,40,.62)"; ctx.beginPath(); ctx.arc(cx, cy, 36, 0, 7); ctx.fill();
   ctx.lineWidth = 7; ctx.strokeStyle = "rgba(255,255,255,.15)"; ctx.beginPath(); ctx.arc(cx, cy, 31, 0, 7); ctx.stroke();
   ctx.strokeStyle = low ? "#ff5a3d" : "#6fe07a"; ctx.lineCap = "round"; ctx.beginPath(); ctx.arc(cx, cy, 31, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * frac); ctx.stroke(); ctx.lineCap = "butt";
   txt(String(tl), cx, cy + 1, low ? 34 + Math.sin(t * 12) * 2 : 32, "center", low ? "#ff8a6a" : "#fff7e0");
-  if (state === "play" && combo >= 3) { const mult = 1 + Math.min(3, Math.floor(combo / 5)), sc = 1 + Math.sin(t * 10) * .04; ctx.save(); ctx.translate(W / 2, 104); ctx.scale(sc, sc); plate(-82, -18, 164, 36, 18); ctx.fillStyle = mult > 1 ? "#ff8a1c" : "#e8452e"; ctx.fill(); ctx.strokeStyle = "#fff"; ctx.lineWidth = 2.5; ctx.stroke(); txt(`SERIE ${combo}${mult > 1 ? "  ·  x" + mult : ""}`, 0, 1, 22, "center"); ctx.restore(); }
+  if (curM.lives) for (let i = 0; i < 3; i++) heart(W / 2 - 40 + i * 40, 44, 14, i < lives);
+  const boss = chickens.find(c => c.sp === "boss" && !c.dead);
+  if (boss && state === "play") { plate(60, 112, 420, 26, 13); ctx.fillStyle = "rgba(14,22,40,.7)"; ctx.fill(); plate(64, 116, Math.max(10, 412 * boss.hp / boss.maxhp), 18, 9); ctx.fillStyle = boss.enraged ? "#ff3a2a" : "#ff9a1c"; ctx.fill(); txt("BOSS-HAHN", W / 2, 98, 20, "center", "#ffcf3a"); }
+  if (state === "play" && combo >= 3) { const mult = 1 + Math.min(3, Math.floor(combo / 5)), sc = 1 + Math.sin(t * 10) * .04; ctx.save(); ctx.translate(W / 2, curM.boss ? 172 : 104); ctx.scale(sc, sc); plate(-82, -18, 164, 36, 18); ctx.fillStyle = mult > 1 ? "#ff8a1c" : "#e8452e"; ctx.fill(); ctx.strokeStyle = "#fff"; ctx.lineWidth = 2.5; ctx.stroke(); txt(`SERIE ${combo}${mult > 1 ? "  ·  x" + mult : ""}`, 0, 1, 22, "center"); ctx.restore(); }
   // Munition
   const sp = Math.min(20, 300 / MAG), bw = Math.min(11, sp - 2);
   plate(12, H - 96, MAG * sp + 22, 50, 14); ctx.fillStyle = "rgba(14,22,40,.62)"; ctx.fill();
@@ -552,7 +622,7 @@ function hud() {
     ctx.fillStyle = full ? "#c9662a" : "rgba(255,255,255,.15)"; ctx.beginPath(); ctx.moveTo(0, 14); ctx.lineTo(5.5, 1); ctx.lineTo(11, 14); ctx.fill(); ctx.restore();
   }
   if (reloadT > 0) { plate(12, H - 112, 184, 10, 5); ctx.fillStyle = "rgba(0,0,0,.5)"; ctx.fill(); plate(12, H - 112, Math.max(10, 184 * (1 - reloadT / RELOAD)), 10, 5); ctx.fillStyle = "#6fe07a"; ctx.fill(); }
-  else if (ammo === 0 && state === "play") txt("NACHLADEN!", W / 2, H - 150, 34 + Math.sin(t * 10) * 2, "center", "#ffcf3a");
+  else if (ammo === 0 && state === "play" && !curM.sniper) txt("NACHLADEN!", W / 2, H - 150, 34 + Math.sin(t * 10) * 2, "center", "#ffcf3a");
 }
 function crosshair() {
   const { x, y } = mouse, r = 20 + kick * 8; ctx.save(); ctx.translate(x, y); ctx.lineCap = "round";
@@ -583,6 +653,10 @@ addEventListener("pointerup", () => { holding = false; }); addEventListener("poi
 addEventListener("keydown", e => { if (e.code === "KeyR") reload(); if (e.code === "Space" && state === "play") shoot(mouse.x, mouse.y); });
 $("reload").addEventListener("pointerdown", e => { e.stopPropagation(); reload(); });
 $("go").onclick = start; $("again").onclick = start;
+$("menubtn").onclick = () => { $("end").classList.add("off"); $("start").classList.remove("off"); renderModes(); refreshMenu(); };
+$("infobtn").onclick = () => { $("start").classList.add("off"); $("info").classList.remove("off"); };
+$("info-back").onclick = () => { $("info").classList.add("off"); $("start").classList.remove("off"); };
+renderModes();
 let shopBack = "start";
 function openShop(from) { shopBack = from; $("start").classList.add("off"); $("end").classList.add("off"); renderShop(); $("shop").classList.remove("off"); }
 $("shopbtn").onclick = () => openShop("start"); $("shopbtn2").onclick = () => openShop("end");
