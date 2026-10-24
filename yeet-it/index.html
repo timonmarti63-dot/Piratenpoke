@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Yeet It!</title>
+<style>
+  :root { --bg:#10131c; --panel:#1b2030; --accent:#ffcc33; --text:#f3f5fa; --muted:#8d95ad; --ok:#46d37a; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; }
+  html,body { margin:0; height:100%; background:var(--bg); color:var(--text);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; overflow:hidden; }
+  #wrap { position:relative; width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  #stage { position:relative; width:min(100vw, calc(100vh * 16 / 9 * 0.78)); aspect-ratio:16/9; }
+  canvas { width:100%; height:100%; display:block; border-radius:10px; touch-action:none; background:#000; }
+  #hud { position:absolute; inset:0; pointer-events:none; display:flex; justify-content:space-between; padding:10px 14px; font-weight:800; text-shadow:0 2px 0 rgba(0,0,0,.35); font-size:clamp(14px,2.6vw,26px); }
+  #hud small { display:block; font-weight:600; font-size:.55em; opacity:.8; }
+  #msg { position:absolute; left:0; right:0; top:42%; text-align:center; font-size:clamp(16px,3vw,30px); font-weight:800; text-shadow:0 2px 0 rgba(0,0,0,.4); pointer-events:none; }
+  #panel { width:min(100vw, calc(100vh * 16 / 9 * 0.78)); background:var(--panel); border-radius:12px; margin-top:8px; padding:8px; display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+  button { font:inherit; font-weight:700; color:var(--text); background:#2a3150; border:0; border-radius:10px; padding:9px 12px; cursor:pointer; min-width:0; }
+  button:active { transform:translateY(1px); }
+  button[disabled] { opacity:.45; cursor:default; }
+  button.primary { background:var(--accent); color:#1a1400; }
+  button.ad { background:var(--ok); color:#04200f; }
+  .up { flex:1 1 150px; text-align:left; display:flex; flex-direction:column; gap:2px; }
+  .up b { font-size:.95em; } .up span { font-size:.78em; color:var(--muted); } .up em { font-style:normal; color:var(--accent); font-size:.85em; }
+  #bar { display:flex; gap:8px; width:100%; flex-wrap:wrap; justify-content:center; }
+  .modal { position:fixed; inset:0; background:rgba(5,7,12,.8); display:none; align-items:center; justify-content:center; z-index:10; padding:14px; }
+  .modal.on { display:flex; }
+  .card { background:var(--panel); border-radius:14px; padding:16px; width:min(560px,100%); max-height:90vh; overflow:auto; }
+  .card h2 { margin:0 0 10px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:8px; margin-bottom:12px; }
+  .item { background:#252b45; border-radius:10px; padding:8px; text-align:center; font-size:.85em; }
+  .item.sel { outline:2px solid var(--accent); }
+  .item canvas { width:64px; height:64px; background:transparent; }
+  .item small { display:block; color:var(--muted); }
+  input { font:inherit; padding:8px; border-radius:8px; border:0; width:60%; background:#0f1424; color:var(--text); }
+  #ad { text-align:center; } #ad .box { height:150px; border-radius:10px; background:linear-gradient(135deg,#ff5f6d,#ffc371); display:flex; align-items:center; justify-content:center; font-size:1.3em; font-weight:800; color:#2b1200; margin-bottom:10px; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="stage">
+    <canvas id="c" width="960" height="540"></canvas>
+    <div id="hud">
+      <div><span id="dist">0 m</span><small>Rekord: <span id="best">0</span> m</small></div>
+      <div style="text-align:right">🪙 <span id="coins">0</span><small id="run">+0 diese Runde</small></div>
+    </div>
+    <div id="msg"></div>
+  </div>
+  <div id="panel">
+    <div id="bar">
+      <button class="up" id="u-power"></button>
+      <button class="up" id="u-bounce"></button>
+      <button class="up" id="u-offline"></button>
+    </div>
+    <button id="b-ad" class="ad" style="display:none">📺 Spot ansehen: +500 m Kick</button>
+    <button id="b-again" class="primary" style="display:none">Nochmal! ↻</button>
+    <button id="b-shop">👕 Skins &amp; Trails</button>
+  </div>
+</div>
+
+<div class="modal" id="shop"><div class="card">
+  <h2>Skins &amp; Trails</h2>
+  <div class="grid" id="skins"></div>
+  <div class="grid" id="trails"></div>
+  <div style="margin-bottom:12px"><input id="promo" placeholder="Promo-Code (z.B. SHAKER)"> <button id="b-promo">Einlösen</button></div>
+  <div id="promo-msg" style="color:var(--muted);min-height:1.2em;margin-bottom:8px"></div>
+  <button id="b-close">Schliessen</button>
+</div></div>
+
+<div class="modal" id="adm"><div class="card" id="ad">
+  <div class="box" id="ad-box">Deine Werbung hier</div>
+  <div id="ad-t">Spot läuft… 3</div>
+</div></div>
+
+<div class="modal" id="offm"><div class="card">
+  <h2>Willkommen zurück!</h2>
+  <p id="off-t"></p>
+  <button class="primary" id="b-off">Einsammeln</button>
+</div></div>
+
+<script>
+"use strict";
+// ============================ Konfiguration ============================
+const W = 960, H = 540, GROUND = 460, PX_PER_M = 10;
+const GRAVITY = 1100;
+const LAUNCHER = { x: 140, y: 400 };
+const SPONSORS = ["PROTEIN+", "SNEAKR DROP", "ZAP ENERGY", "BURGER KING-SIZE", "YEET COLA"]; // später dynamisch ladbar
+const SKINS = [
+  { id: "dummy",  name: "Crash-Test-Dummy", cost: 0 },
+  { id: "shaker", name: "Protein-Shaker",   cost: 2500, code: "SHAKER" },
+  { id: "sneaker",name: "Sneaker",          cost: 6000, code: "KICKS" },
+  { id: "anvil",  name: "Amboss",           cost: 15000 },
+  { id: "star",   name: "Anime-Star",       cost: 40000 },
+];
+const TRAILS = [
+  { id: "none",    name: "Kein Trail",  cost: 0 },
+  { id: "rainbow", name: "Regenbogen",  cost: 3000 },
+  { id: "fire",    name: "Flammen",     cost: 9000 },
+  { id: "energy",  name: "Energy-Nebel",cost: 20000, code: "ZAP" },
+];
+const UPGRADES = {
+  power:   { name: "Abschusskraft", icon: "💪", base: 20,  growth: 1.28, desc: l => `Startgeschw. ${Math.round(power(l))}` },
+  bounce:  { name: "Sprungkraft",   icon: "🦘", base: 30,  growth: 1.32, desc: l => `${groundBounces(l)} Bodenhüpfer` },
+  offline: { name: "Offline-Einnahmen", icon: "💤", base: 50, growth: 1.35, desc: l => `${fmt(offlineRate(l))} 🪙/Sek.` },
+};
+const power = l => 900 + l * 120;
+const groundBounces = l => Math.floor(l / 2);
+const bounceRestitution = l => Math.min(0.75, 0.38 + l * 0.03);
+const offlineRate = l => l * l * 0.5 + l; // Level 0 = 0
+const upgradeCost = (k, l) => Math.floor(UPGRADES[k].base * Math.pow(UPGRADES[k].growth, l));
+
+// ============================ Savegame ============================
+const SAVE_KEY = "yeetit.save.v1";
+let save = { coins: 0, best: 0, lvl: { power: 0, bounce: 0, offline: 0 }, skins: ["dummy"], trails: ["none"], skin: "dummy", trail: "none", last: Date.now() };
+try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s) save = Object.assign(save, s, { lvl: Object.assign(save.lvl, s.lvl) }); } catch (e) {}
+const persist = () => { save.last = Date.now(); try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {} };
+
+function fmt(n) {
+  n = Math.floor(n);
+  const u = ["", "K", "M", "B", "T", "Qa", "Qi"];
+  let i = 0, v = n;
+  while (v >= 1000 && i < u.length - 1) { v /= 1000; i++; }
+  return (i === 0 ? v : v.toFixed(v < 10 ? 2 : v < 100 ? 1 : 0)) + u[i];
+}
+
+// ============================ DOM ============================
+const $ = id => document.getElementById(id);
+const cv = $("c"), ctx = cv.getContext("2d");
+
+// ============================ Zustand ============================
+let state = "ready"; // ready | flying | over
+let paid = 0, p, cam, objs, particles, nextGen, runCoins, drag, boosts, groundHits, revived, shake = 0, time = 0;
+
+function resetRun() {
+  p = { x: LAUNCHER.x, y: LAUNCHER.y, vx: 0, vy: 0, rot: 0, r: 18 };
+  cam = 0; objs = []; particles = []; nextGen = 600; runCoins = 0; drag = null;
+  boosts = 3; groundHits = 0; revived = false; paid = 0;
+  generate(p.x + 3000);
+  state = "ready";
+  $("b-ad").style.display = "none"; $("b-again").style.display = "none";
+  setMsg("Ziehen & loslassen zum Abschuss!");
+}
+const dist = () => Math.max(0, (p.x - LAUNCHER.x) / PX_PER_M);
+
+function setMsg(t) { $("msg").textContent = t; }
+
+// ============================ Welt-Generierung ============================
+function generate(upTo) {
+  while (nextGen < upTo) {
+    const d = (nextGen - LAUNCHER.x) / PX_PER_M;
+    const gap = Math.max(260, 520 - d * 0.5);
+    const r = Math.random();
+    const x = nextGen;
+    if (r < 0.40) { // Münzbogen
+      const n = 7, h = 80 + Math.random() * 220;
+      for (let i = 0; i < n; i++) {
+        const t = i / (n - 1);
+        objs.push({ t: "coin", x: x + i * 46, y: GROUND - 40 - h * Math.sin(t * Math.PI), got: false });
+      }
+    } else if (r < 0.62) { // Trampolin
+      objs.push({ t: "pad", x, y: GROUND - 14, w: 90, h: 14 });
+    } else if (r < 0.82) { // Werbetafel zum Durchkrachen
+      const bh = 120 + Math.random() * 90;
+      objs.push({ t: "board", x, y: GROUND - bh, w: 150, h: bh - 0, hit: false, name: SPONSORS[(Math.random() * SPONSORS.length) | 0] });
+    } else { // Ballon-Cluster (federnd in der Luft)
+      const n = 3 + ((Math.random() * 3) | 0), by = GROUND - 150 - Math.random() * 200;
+      for (let i = 0; i < n; i++) objs.push({ t: "balloon", x: x + i * 50, y: by + Math.sin(i * 1.7) * 40, r: 24, hue: (i * 70 + x) % 360, popped: false });
+    }
+    nextGen += gap + Math.random() * 200;
+  }
+}
+
+// ============================ Abschuss & Flug ============================
+function launch(pull) {
+  const len = Math.min(Math.hypot(pull.x, pull.y), 140);
+  if (len < 18) return false;
+  const k = len / 140, ang = Math.atan2(-pull.y, -pull.x);
+  const v = power(save.lvl.power) * (0.35 + 0.65 * k);
+  p.vx = Math.cos(ang) * v; p.vy = Math.sin(ang) * v;
+  if (p.vx < 120) p.vx = 120;
+  state = "flying"; setMsg("");
+  shake = 6;
+  burst(p.x, p.y, 14, "#fff");
+  return true;
+}
+
+function boost() {
+  if (boosts <= 0) return;
+  boosts--;
+  p.vx += 380 + save.lvl.power * 20; p.vy = Math.min(p.vy, 0) - 380;
+  burst(p.x, p.y, 16, "#ffa733");
+  shake = 4;
+}
+
+function burst(x, y, n, col) {
+  for (let i = 0; i < n; i++) {
+    const a = Math.random() * Math.PI * 2, s = 80 + Math.random() * 260;
+    particles.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 0.5 + Math.random() * 0.4, max: 0.9, col, size: 3 + Math.random() * 4 });
+  }
+}
+
+function endRun() {
+  state = "over";
+  const d = dist();
+  const bonus = Math.floor(d * 2);
+  const total = runCoins + bonus;
+  save.coins += bonus - paid; paid = bonus; // Münzen wurden schon live gutgeschrieben
+  const newBest = d > save.best;
+  if (newBest) save.best = Math.floor(d);
+  persist();
+  setMsg(`${Math.floor(d)} m  ·  +${fmt(total)} 🪙${newBest ? "  ·  NEUER REKORD!" : ""}`);
+  $("b-again").style.display = "";
+  $("b-ad").style.display = revived ? "none" : "";
+  refresh();
+}
+
+function revive() {
+  revived = true;
+  p.vx = 2200; p.vy = -900; boosts = Math.max(boosts, 1);
+  state = "flying"; setMsg("");
+  $("b-ad").style.display = "none"; $("b-again").style.display = "none";
+  burst(p.x, p.y, 30, "#46d37a"); shake = 10;
+}
+
+function update(dt) {
+  time += dt;
+  for (const q of particles) { q.x += q.vx * dt; q.y += q.vy * dt; q.vy += 400 * dt; q.life -= dt; }
+  particles = particles.filter(q => q.life > 0);
+  if (shake > 0) shake = Math.max(0, shake - 30 * dt);
+
+  if (state === "flying") {
+    p.vy += GRAVITY * dt;
+    p.x += p.vx * dt; p.y += p.vy * dt;
+    p.rot += p.vx * dt * 0.012;
+    generate(p.x + 3000);
+    trailPuff();
+
+    for (const o of objs) {
+      if (o.t === "coin" && !o.got && Math.hypot(o.x - p.x, o.y - p.y) < 34) {
+        o.got = true; const v = 1 + Math.floor(dist() / 500); runCoins += v; save.coins += v;
+        burst(o.x, o.y, 4, "#ffd23f");
+      } else if (o.t === "pad" && p.vy > 0 && p.x > o.x && p.x < o.x + o.w && p.y + p.r > o.y) {
+        p.vy = -Math.max(900, p.vy * 0.9) - save.lvl.bounce * 25; p.vx *= 1.05; p.y = o.y - p.r;
+        burst(p.x, o.y, 12, "#ff5f6d"); shake = 5;
+      } else if (o.t === "board" && !o.hit && p.x + p.r > o.x && p.x - p.r < o.x + o.w && p.y + p.r > o.y) {
+        o.hit = true; p.vx *= 0.93;
+        const v = 25 + Math.floor(dist() / 40); runCoins += v; save.coins += v;
+        burst(p.x, p.y, 28, "#ffffff"); shake = 9;
+      } else if (o.t === "balloon" && !o.popped && Math.hypot(o.x - p.x, o.y - p.y) < o.r + p.r) {
+        o.popped = true; p.vy = -Math.max(520, Math.abs(p.vy) * 0.8); p.vx += 90;
+        burst(o.x, o.y, 10, `hsl(${o.hue},80%,60%)`);
+      }
+    }
+
+    if (p.y + p.r >= GROUND) {
+      p.y = GROUND - p.r;
+      if (groundHits < groundBounces(save.lvl.bounce) && p.vy > 200) {
+        groundHits++;
+        p.vy = -p.vy * bounceRestitution(save.lvl.bounce); p.vx *= 0.88;
+        burst(p.x, GROUND, 10, "#caa66a"); shake = 4;
+      } else { burst(p.x, GROUND, 18, "#caa66a"); shake = 8; endRun(); }
+    }
+    cam += (Math.max(0, p.x - 260) - cam) * Math.min(1, dt * 8);
+    if (p.vx > 0) p.vx = Math.max(0, p.vx - 40 * dt); // leichter Luftwiderstand
+    objs = objs.filter(o => o.x > cam - 300);
+  } else if (state === "ready") {
+    cam += (0 - cam) * Math.min(1, dt * 6);
+  } else if (state === "over") {
+    cam += (Math.max(0, p.x - 260) - cam) * Math.min(1, dt * 8);
+  }
+
+  $("dist").textContent = Math.floor(dist()) + " m";
+  $("best").textContent = Math.max(save.best, Math.floor(dist()));
+  $("coins").textContent = fmt(save.coins);
+  $("run").textContent = `+${fmt(runCoins)} diese Runde`;
+}
+
+let trailTick = 0;
+function trailPuff() {
+  trailTick++;
+  if (trailTick % 2) return;
+  const t = save.trail;
+  if (t === "none") return;
+  let col = "#fff", vy = 0;
+  if (t === "rainbow") col = `hsl(${(time * 300) % 360},90%,60%)`;
+  else if (t === "fire") { col = Math.random() < .5 ? "#ff8a1f" : "#ffd23f"; vy = -60; }
+  else if (t === "energy") { col = "rgba(80,255,120,.8)"; vy = -20; }
+  particles.push({ x: p.x, y: p.y, vx: -40 + Math.random() * 20, vy: vy + Math.random() * 20 - 10, life: 0.7, max: 0.7, col, size: 6 + Math.random() * 5, soft: true });
+}
+
+// ============================ Rendering ============================
+const WORLDS = [
+  { sky: ["#6ec6ff", "#d8f3ff"], hill: "#5fbf6b", hill2: "#3f9a55", ground: "#7a5a3a", top: "#58b85f" },
+  { sky: ["#ff9a5a", "#ffe0a8"], hill: "#d98c4a", hill2: "#b3693a", ground: "#7d4a2c", top: "#c97c3e" },
+  { sky: ["#0b0d2a", "#3b2a6b"], hill: "#4a3d8f", hill2: "#352c6e", ground: "#262050", top: "#6a5acd" },
+];
+
+function draw() {
+  const w = WORLDS[Math.floor(dist() / 1500) % WORLDS.length];
+  const g = ctx.createLinearGradient(0, 0, 0, GROUND);
+  g.addColorStop(0, w.sky[0]); g.addColorStop(1, w.sky[1]);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+
+  const sx = shake ? (Math.random() - .5) * shake : 0, sy = shake ? (Math.random() - .5) * shake : 0;
+  ctx.save(); ctx.translate(sx, sy);
+
+  // Parallax-Hügel
+  hills(w.hill2, 0.2, 330, 90, 0.004); hills(w.hill, 0.45, 390, 70, 0.007);
+
+  ctx.save(); ctx.translate(-cam, 0);
+  // Boden
+  ctx.fillStyle = w.ground; ctx.fillRect(cam - 20, GROUND, W + 40, H - GROUND);
+  ctx.fillStyle = w.top; ctx.fillRect(cam - 20, GROUND, W + 40, 10);
+  // Meter-Marker
+  ctx.fillStyle = "rgba(255,255,255,.7)"; ctx.font = "bold 14px system-ui"; ctx.textAlign = "center";
+  for (let m = Math.ceil(cam / PX_PER_M / 100) * 100; m < (cam + W) / PX_PER_M; m += 100) {
+    const x = LAUNCHER.x + m * PX_PER_M;
+    ctx.fillRect(x - 1, GROUND, 2, 24); ctx.fillText(m + " m", x, GROUND + 42);
+  }
+
+  // Katapult
+  drawLauncher();
+
+  // Objekte
+  for (const o of objs) {
+    if (o.x < cam - 200 || o.x > cam + W + 200) continue;
+    if (o.t === "coin" && !o.got) {
+      ctx.fillStyle = "#ffd23f"; ctx.strokeStyle = "#b8860b"; ctx.lineWidth = 3;
+      const sq = Math.abs(Math.cos(time * 4 + o.x * 0.05));
+      ctx.beginPath(); ctx.ellipse(o.x, o.y, 11 * (0.35 + 0.65 * sq), 11, 0, 0, 7); ctx.fill(); ctx.stroke();
+    } else if (o.t === "pad") {
+      ctx.fillStyle = "#ff5f6d"; ctx.fillRect(o.x, o.y, o.w, o.h);
+      ctx.fillStyle = "#fff"; for (let i = 0; i < 4; i++) ctx.fillRect(o.x + 8 + i * 22, o.y + 3, 10, 4);
+    } else if (o.t === "board") {
+      if (o.hit) { // zerbrochen
+        ctx.fillStyle = "#3a3f55"; ctx.fillRect(o.x + 10, GROUND - 14, 40, 14); ctx.fillRect(o.x + 80, GROUND - 8, 50, 8);
+      } else {
+        ctx.fillStyle = "#555b78"; ctx.fillRect(o.x + 20, o.y + 60, 12, o.h - 60); ctx.fillRect(o.x + o.w - 32, o.y + 60, 12, o.h - 60);
+        ctx.fillStyle = "#f4f4f8"; ctx.fillRect(o.x, o.y, o.w, 80);
+        ctx.strokeStyle = "#222"; ctx.lineWidth = 4; ctx.strokeRect(o.x, o.y, o.w, 80);
+        ctx.fillStyle = "#e0245e"; ctx.font = "800 17px system-ui"; ctx.textAlign = "center";
+        ctx.fillText(o.name, o.x + o.w / 2, o.y + 47);
+      }
+    } else if (o.t === "balloon" && !o.popped) {
+      const by = o.y + Math.sin(time * 2 + o.x) * 6;
+      ctx.fillStyle = `hsl(${o.hue},80%,60%)`; ctx.beginPath(); ctx.ellipse(o.x, by, o.r * .85, o.r, 0, 0, 7); ctx.fill();
+      ctx.strokeStyle = "rgba(0,0,0,.35)"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(o.x, by + o.r); ctx.lineTo(o.x, by + o.r + 24); ctx.stroke();
+    }
+  }
+
+  // Partikel
+  for (const q of particles) {
+    ctx.globalAlpha = Math.max(0, q.life / q.max); ctx.fillStyle = q.col;
+    ctx.beginPath(); ctx.arc(q.x, q.y, q.size * (q.soft ? 1 + (1 - q.life / q.max) : 1), 0, 7); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  // Spieler
+  if (state === "ready" && drag) {
+    // Zugband & Flugbahn-Vorschau
+    const pull = dragVec();
+    const px = LAUNCHER.x + pull.x, py = LAUNCHER.y + pull.y;
+    ctx.strokeStyle = "#3b2a18"; ctx.lineWidth = 6;
+    ctx.beginPath(); ctx.moveTo(LAUNCHER.x - 18, LAUNCHER.y - 30); ctx.lineTo(px, py); ctx.lineTo(LAUNCHER.x + 18, LAUNCHER.y - 30); ctx.stroke();
+    const len = Math.min(Math.hypot(pull.x, pull.y), 140), k = len / 140, ang = Math.atan2(-pull.y, -pull.x);
+    const v = power(save.lvl.power) * (0.35 + 0.65 * k);
+    let vx = Math.cos(ang) * v, vy = Math.sin(ang) * v, qx = px, qy = py;
+    ctx.fillStyle = "rgba(255,255,255,.75)";
+    for (let i = 0; i < 24; i++) { vy += GRAVITY * 0.05; qx += vx * 0.05; qy += vy * 0.05; if (i % 2) { ctx.beginPath(); ctx.arc(qx, qy, 4, 0, 7); ctx.fill(); } }
+    drawSkin(ctx, save.skin, px, py, 0, p.r);
+  } else drawSkin(ctx, save.skin, p.x, p.y - (state === "ready" ? 0 : 0), p.rot, p.r);
+
+  ctx.restore();
+  ctx.restore();
+
+  // Boost-Anzeige
+  if (state === "flying") {
+    ctx.fillStyle = "rgba(0,0,0,.4)"; ctx.fillRect(14, H - 34, 130, 22);
+    for (let i = 0; i < 3; i++) { ctx.fillStyle = i < boosts ? "#ffa733" : "#555"; ctx.fillRect(18 + i * 41, H - 30, 37, 14); }
+    ctx.fillStyle = "#fff"; ctx.font = "700 12px system-ui"; ctx.textAlign = "left"; ctx.fillText("TIPPEN = BOOST", 154, H - 18);
+  }
+}
+
+function hills(col, par, base, amp, freq) {
+  ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(0, H);
+  for (let x = 0; x <= W; x += 16) ctx.lineTo(x, base - amp * (0.5 + 0.5 * Math.sin((x + cam * par) * freq * 2.2 + Math.sin((x + cam * par) * freq))));
+  ctx.lineTo(W, H); ctx.fill();
+}
+
+function drawLauncher() {
+  ctx.fillStyle = "#6b4a2b"; ctx.fillRect(LAUNCHER.x - 40, GROUND - 14, 80, 14);
+  ctx.strokeStyle = "#4a321c"; ctx.lineWidth = 12; ctx.lineCap = "round";
+  ctx.beginPath(); ctx.moveTo(LAUNCHER.x - 18, GROUND - 14); ctx.lineTo(LAUNCHER.x - 18, LAUNCHER.y - 30);
+  ctx.moveTo(LAUNCHER.x + 18, GROUND - 14); ctx.lineTo(LAUNCHER.x + 18, LAUNCHER.y - 30); ctx.stroke();
+  ctx.lineCap = "butt";
+}
+
+function drawSkin(c, id, x, y, rot, r) {
+  c.save(); c.translate(x, y); c.rotate(rot); c.lineWidth = 3; c.strokeStyle = "#1b1b1b";
+  if (id === "dummy") {
+    c.fillStyle = "#ffcc33"; c.beginPath(); c.arc(0, 0, r, 0, 7); c.fill(); c.stroke();
+    c.fillStyle = "#1b1b1b"; c.fillRect(-r, -2, r * 2, 3); c.fillRect(-1.5, -r, 3, r * 2);
+    c.beginPath(); c.arc(0, 0, r * .45, 0, 7); c.stroke();
+  } else if (id === "shaker") {
+    c.fillStyle = "#e8f1ff"; c.fillRect(-r * .7, -r * .7, r * 1.4, r * 1.6); c.strokeRect(-r * .7, -r * .7, r * 1.4, r * 1.6);
+    c.fillStyle = "#e0245e"; c.fillRect(-r * .8, -r, r * 1.6, r * .4); c.strokeRect(-r * .8, -r, r * 1.6, r * .4);
+    c.fillStyle = "#222"; c.font = "800 11px system-ui"; c.textAlign = "center"; c.fillText("P+", 0, r * .35);
+  } else if (id === "sneaker") {
+    c.fillStyle = "#fff"; c.beginPath(); c.moveTo(-r, r * .6); c.lineTo(-r, -r * .2); c.lineTo(-r * .2, -r * .5); c.lineTo(r * .2, 0); c.lineTo(r, r * .2); c.lineTo(r, r * .6); c.closePath(); c.fill(); c.stroke();
+    c.fillStyle = "#e0245e"; c.fillRect(-r, r * .45, r * 2, r * .3);
+  } else if (id === "anvil") {
+    c.fillStyle = "#4a4f63"; c.beginPath(); c.moveTo(-r, -r * .6); c.lineTo(r * 1.1, -r * .6); c.lineTo(r * .5, -r * .1); c.lineTo(r * .5, r * .3); c.lineTo(r * .9, r * .8); c.lineTo(-r * .9, r * .8); c.lineTo(-r * .5, r * .3); c.lineTo(-r * .5, -r * .1); c.closePath(); c.fill(); c.stroke();
+  } else if (id === "star") {
+    c.fillStyle = "#ff7ad9"; c.beginPath();
+    for (let i = 0; i < 10; i++) { const a = i * Math.PI / 5 - Math.PI / 2, rr = i % 2 ? r * .5 : r * 1.15; c.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); }
+    c.closePath(); c.fill(); c.stroke();
+  }
+  c.restore();
+}
+
+// ============================ Input ============================
+function logical(e) {
+  const r = cv.getBoundingClientRect();
+  return { x: (e.clientX - r.left) * W / r.width, y: (e.clientY - r.top) * H / r.height };
+}
+function dragVec() {
+  let dx = drag.cur.x - drag.start.x, dy = drag.cur.y - drag.start.y;
+  const l = Math.hypot(dx, dy);
+  if (l > 140) { dx *= 140 / l; dy *= 140 / l; }
+  if (dx > 0) dx = 0; // nur nach hinten ziehen
+  return { x: dx, y: dy };
+}
+cv.addEventListener("pointerdown", e => {
+  if (state === "ready") { const pt = logical(e); drag = { start: pt, cur: pt }; cv.setPointerCapture(e.pointerId); }
+  else if (state === "flying") boost();
+});
+cv.addEventListener("pointermove", e => { if (drag) drag.cur = logical(e); });
+const release = () => {
+  if (!drag) return;
+  const pull = dragVec(); drag = null;
+  if (state === "ready") { if (!launch(pull)) setMsg("Weiter zurückziehen!"); }
+};
+cv.addEventListener("pointerup", release);
+cv.addEventListener("pointercancel", () => { drag = null; });
+addEventListener("keydown", e => { if (e.code === "Space" && state === "flying") { e.preventDefault(); boost(); } });
+
+// ============================ UI ============================
+function refresh() {
+  for (const k of Object.keys(UPGRADES)) {
+    const u = UPGRADES[k], l = save.lvl[k], c = upgradeCost(k, l), b = $("u-" + k);
+    b.innerHTML = `<b>${u.icon} ${u.name} · Lv ${l}</b><span>${u.desc(l)} → ${u.desc(l + 1)}</span><em>${fmt(c)} 🪙</em>`;
+    b.disabled = save.coins < c;
+  }
+  $("coins").textContent = fmt(save.coins);
+}
+for (const k of Object.keys(UPGRADES)) {
+  $("u-" + k).onclick = () => {
+    const c = upgradeCost(k, save.lvl[k]);
+    if (save.coins < c) return;
+    save.coins -= c; save.lvl[k]++; persist(); refresh();
+  };
+}
+$("b-again").onclick = resetRun;
+$("b-ad").onclick = () => {
+  // Platzhalter für ein echtes Rewarded-Ad-SDK (AdMob, Unity Ads, …)
+  let t = 3; $("adm").classList.add("on"); $("ad-box").textContent = SPONSORS[(Math.random() * SPONSORS.length) | 0] + " – jetzt neu!";
+  $("ad-t").textContent = `Spot läuft… ${t}`;
+  const iv = setInterval(() => {
+    t--; $("ad-t").textContent = `Spot läuft… ${t}`;
+    if (t <= 0) { clearInterval(iv); $("adm").classList.remove("on"); revive(); }
+  }, 1000);
+};
+
+function buildShop() {
+  const mk = (list, kind) => {
+    const box = $(kind === "skin" ? "skins" : "trails"); box.innerHTML = "";
+    for (const it of list) {
+      const own = (kind === "skin" ? save.skins : save.trails).includes(it.id);
+      const sel = (kind === "skin" ? save.skin : save.trail) === it.id;
+      const d = document.createElement("div"); d.className = "item" + (sel ? " sel" : "");
+      if (kind === "skin") { const c = document.createElement("canvas"); c.width = c.height = 64; drawSkin(c.getContext("2d"), it.id, 32, 32, 0, 18); d.appendChild(c); }
+      else d.insertAdjacentHTML("beforeend", `<div style="font-size:34px;height:64px;line-height:64px">${{ none: "∅", rainbow: "🌈", fire: "🔥", energy: "🟢" }[it.id]}</div>`);
+      d.insertAdjacentHTML("beforeend", `<div>${it.name}</div><small>${own ? (sel ? "Aktiv" : "Ausrüsten") : fmt(it.cost) + " 🪙"}</small>`);
+      d.onclick = () => {
+        if (!own) { if (save.coins < it.cost) return; save.coins -= it.cost; (kind === "skin" ? save.skins : save.trails).push(it.id); }
+        if (kind === "skin") save.skin = it.id; else save.trail = it.id;
+        persist(); buildShop(); refresh();
+      };
+      box.appendChild(d);
+    }
+  };
+  mk(SKINS, "skin"); mk(TRAILS, "trail");
+}
+$("b-shop").onclick = () => { buildShop(); $("shop").classList.add("on"); };
+$("b-close").onclick = () => $("shop").classList.remove("on");
+$("b-promo").onclick = () => {
+  const code = $("promo").value.trim().toUpperCase(), hit = [...SKINS, ...TRAILS].find(i => i.code === code);
+  if (!hit) { $("promo-msg").textContent = "Ungültiger Code."; return; }
+  const arr = SKINS.includes(hit) ? save.skins : save.trails;
+  if (arr.includes(hit.id)) { $("promo-msg").textContent = "Schon freigeschaltet."; return; }
+  arr.push(hit.id); persist(); buildShop(); $("promo-msg").textContent = `${hit.name} freigeschaltet!`; $("promo").value = "";
+};
+
+// ============================ Offline-Einnahmen ============================
+function offlineCheck() {
+  const secs = Math.min((Date.now() - save.last) / 1000, 8 * 3600), rate = offlineRate(save.lvl.offline);
+  const gain = Math.floor(secs * rate);
+  if (secs > 60 && gain > 0) {
+    $("off-t").textContent = `Deine Crew hat in ${Math.round(secs / 60)} Min. ${fmt(gain)} 🪙 gesammelt.`;
+    $("offm").classList.add("on");
+    $("b-off").onclick = () => { save.coins += gain; persist(); refresh(); $("offm").classList.remove("on"); };
+  }
+}
+
+// ============================ Loop ============================
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(0.033, (now - last) / 1000); last = now;
+  update(dt); draw(); requestAnimationFrame(frame);
+}
+addEventListener("beforeunload", persist);
+resetRun(); refresh(); offlineCheck(); persist();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
