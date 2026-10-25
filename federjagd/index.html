@@ -91,6 +91,23 @@
   #ctabs { display:flex !important; overflow-x:auto; touch-action:pan-x; gap:6px; } .ctab { flex:0 0 96px; }
   .chead2 { text-align:left; color:var(--gold); font-size:clamp(15px,4.2vw,19px); margin-top:8px; flex:none; }
   .loc small { line-height:1.3; }
+  #modes { flex-direction:row !important; overflow-x:auto; width:min(96%,470px) !important; gap:8px; padding:4px; touch-action:pan-x; scrollbar-width:none; } #modes::-webkit-scrollbar { display:none; }
+  .mchip { flex:0 0 auto; display:flex; align-items:center; gap:6px; padding:.4em .9em; font-size:clamp(14px,4vw,18px); color:#fff; background:rgba(255,255,255,.1); border:2px solid rgba(255,255,255,.18); border-radius:999px; box-shadow:none; }
+  .mchip span { font-size:1.2em; } .mchip.sel { color:#3a1d00; background:linear-gradient(#ffe36b,#ffb11c); border-color:#fff3b0; box-shadow:0 0 18px rgba(255,200,60,.55); } .mchip:active { transform:none; }
+  #mdesc { font-family:system-ui,sans-serif; font-size:clamp(12px,3.4vw,15px); max-width:26em; line-height:1.35; min-height:2.8em; padding:0 12px; } #mdesc b { color:var(--gold); font-family:var(--font); font-weight:400; }
+  .tiles { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; width:min(96%,470px); }
+  .tile { display:flex; flex-direction:column; align-items:center; gap:2px; padding:8px 2px; font-size:clamp(10.5px,3vw,13px); color:#fff; background:rgba(255,255,255,.09); border:1px solid rgba(255,255,255,.16); border-radius:12px; box-shadow:none; font-weight:400; min-width:0; }
+  .tile b { font-size:clamp(20px,6vw,27px); font-weight:400; } .tile span { line-height:1.1; } .tile em { font-style:normal; color:var(--gold); } .tile:active { transform:scale(.96); box-shadow:none; }
+  #pausebtn { position:absolute; right:2.2%; top:9.8%; width:38px; height:38px; padding:0; border-radius:50%; font-size:15px; color:#fff; background:rgba(14,22,40,.7); box-shadow:none; border:2px solid rgba(255,255,255,.35); z-index:3; }
+  #toast { position:absolute; left:50%; bottom:20%; transform:translateX(-50%); background:rgba(14,22,40,.92); color:#fff; padding:.55em 1.1em; border-radius:999px; font-size:clamp(12px,3.6vw,16px); opacity:0; pointer-events:none; transition:opacity .25s; z-index:30; white-space:nowrap; } #toast.on { opacity:1; }
+  .row.col { flex-direction:column; align-items:stretch; width:min(70%,300px); }
+  .setlist { width:min(92%,440px); display:flex; flex-direction:column; gap:12px; text-align:left; font-size:clamp(15px,4.4vw,19px); }
+  .setlist label, .setrow { display:flex; align-items:center; justify-content:space-between; gap:12px; background:rgba(255,255,255,.08); border-radius:12px; padding:8px 12px; } .setlist input[type=range] { flex:1; max-width:60%; accent-color:#ffcf3a; } .setlist small { font-family:system-ui,sans-serif; opacity:.75; font-size:12px; margin-top:-6px; }
+  .seg { display:flex; gap:4px; } .segb { padding:.3em .7em; font-size:.8em; color:#fff; background:rgba(255,255,255,.12); box-shadow:none; border-radius:10px; font-weight:400; } .segb.on { color:#3a1d00; background:linear-gradient(#ffe36b,#ffb11c); } .segb:active { transform:none; }
+  button.ad { background:linear-gradient(#7be88e,#2fb85a); color:#04200f; box-shadow:0 6px 0 #1a7a38, 0 10px 18px rgba(0,0,0,.4), inset 0 2px 0 rgba(255,255,255,.55); } button.ad.sm { font-size:clamp(13px,3.6vw,16px); box-shadow:0 3px 0 #1a7a38; padding:.45em 1.2em; } button.ad[disabled] { opacity:.5; }
+  .adbox { width:min(80%,320px); height:150px; border-radius:16px; background:linear-gradient(135deg,#ff5f6d,#ffc371); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; font-size:clamp(15px,4.4vw,20px); color:#2b1200; } .adn { font-size:54px; }
+  .dexg { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; width:min(94%,440px); max-height:62%; overflow-y:auto; touch-action:pan-y; } .dexc { background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14); border-radius:14px; padding:6px 6px 10px; font-size:clamp(12px,3.4vw,15px); } .dexc canvas { width:72px; height:60px; display:block; margin:0 auto; } .dexc b { display:block; color:var(--gold); font-weight:400; } .dexc small { display:block; font-family:system-ui,sans-serif; opacity:.8; font-size:.8em; margin-bottom:4px; } .dexc.unk b { color:#8d95ad; }
+  #perklist .mis { grid-template-columns:1fr auto; }
 </style>
 </head>
 <body>
@@ -99,20 +116,35 @@
   <canvas id="c" width="540" height="960"></canvas>
   <button id="reload">Nachladen (R)</button>
   <button id="nuke" style="display:none">☢ NUKE</button>
+  <button id="pausebtn" style="display:none">⏸</button>
+  <div id="toast"></div>
+  <div class="ov off" id="adov" style="z-index:40"><h1 style="font-size:clamp(26px,7vw,40px)" id="adov-t">Belohnung</h1><div class="adbox"><div>Werbung (Testanzeige)</div><div class="adn" id="adov-n">3</div></div><button id="adov-x" class="sec sm">Abbrechen</button></div>
   <div class="ov" id="start">
     <h1>FEDER<br>JAGD</h1>
     <div id="profile"></div>
     <div id="modes"></div>
+    <div id="mdesc"></div>
     <div class="row"><button id="go">Los geht's</button><button id="shopbtn" class="sec">Waffen</button></div>
-    <div class="row"><button id="missbtn" class="sec sm">🎯 Missionen<span id="missdot"></span></button><button id="achbtn" class="sec sm">🏆 Erfolge</button><button id="locbtn" class="sec sm">📍 Zermatt</button><button id="infobtn" class="sec sm">🦅 Vögel</button><button id="chestbtn" class="sec sm">📦 Kisten (<span id="chestn">0</span>)</button></div>
+    <div class="tiles">
+      <button id="missbtn" class="tile"><b>🎯</b><span>Missionen<em id="missdot"></em></span></button>
+      <button id="achbtn" class="tile"><b>🏆</b><span>Erfolge</span></button>
+      <button id="locbtn" class="tile"><b>📍</b><span id="locname">Ort</span></button>
+      <button id="chestbtn" class="tile"><b>📦</b><span>Kisten <em id="chestn">0</em></span></button>
+      <button id="infobtn" class="tile"><b>🦅</b><span>Vögel</span></button>
+      <button id="profbtn" class="tile"><b>📊</b><span>Profil</span></button>
+      <button id="dexbtn" class="tile"><b>📖</b><span>Vogeldex</span></button>
+      <button id="perkbtn" class="tile"><b>⭐</b><span>Perks</span></button>
+      <button id="setbtn" class="tile"><b>⚙️</b><span>Optionen</span></button>
+    </div>
     <p id="hi" style="opacity:.8"></p>
   </div>
   <div class="ov off" id="end">
     <h1 id="end-h">Zeit um!</h1>
     <p id="end-t"></p>
     <div id="end-extra"></div>
+    <div class="row"><button id="ad2x" class="ad" style="display:none">📺 Münzen verdoppeln</button></div>
     <div class="row"><button id="again">Nochmal</button><button id="chestbtn2" class="sec" style="display:none">📦 Öffnen</button></div>
-    <div class="row"><button id="shopbtn2" class="sec sm">Waffen</button><button id="menubtn" class="sec sm">Modi</button></div>
+    <div class="row"><button id="shopbtn2" class="sec sm">Waffen</button><button id="menubtn" class="sec sm">Modi</button><button id="sharebtn" class="sec sm">📤 Teilen</button></div>
   </div>
   <div class="ov off" id="info">
     <h1 style="font-size:clamp(34px,10vw,56px)">VÖGEL</h1>
@@ -144,6 +176,7 @@
     <div id="reelwrap"><div id="reel"></div><div id="reelmark"></div><div id="reelflash"></div></div>
     <div id="cres"></div>
     <div class="row"><button id="c-open">Öffnen</button><button id="c-contents" class="sec">Inhalt</button></div>
+    <button id="c-ad" class="ad sm">📺 Gratis Federbox</button>
     <div id="cbal"></div>
     <button id="cases-back" class="sec">Zurück</button>
   </div>
@@ -159,6 +192,46 @@
     <div id="plist" class="list"></div>
     <button id="places-back">Zurück</button>
   </div>
+  <div class="ov off" id="pause">
+    <h1>PAUSE</h1>
+    <div class="row col"><button id="p-resume">Weiter</button><button id="p-settings" class="sec">Optionen</button><button id="p-quit" class="sec">Runde beenden</button></div>
+  </div>
+  <div class="ov off" id="settings">
+    <h1 style="font-size:clamp(28px,8vw,46px)">OPTIONEN</h1>
+    <div class="setlist">
+      <label>Effekte <input type="range" id="s-sfx" min="0" max="1" step=".05"></label>
+      <label>Musik <input type="range" id="s-mus" min="0" max="1" step=".05"></label>
+      <div class="setrow">Vibration <div class="seg" id="s-haptic"></div></div>
+      <div class="setrow">Steuerung <div class="seg" id="s-ctrl"></div></div>
+      <small id="s-ctrl-d"></small>
+      <div class="setrow">Grafik <div class="seg" id="s-gfx"></div></div>
+      <button id="s-tut" class="sec sm">Tutorial wiederholen</button>
+    </div>
+    <button id="settings-back">Zurück</button>
+  </div>
+  <div class="ov off" id="stats">
+    <h1 style="font-size:clamp(28px,8vw,46px)">PROFIL</h1>
+    <div id="statlist" class="list"></div>
+    <button id="stats-back">Zurück</button>
+  </div>
+  <div class="ov off" id="dex">
+    <h1 style="font-size:clamp(28px,8vw,46px)">VOGELDEX</h1>
+    <p>Erlege Vögel und sammle Belohnungen bei 10, 50, 200 und 500.</p>
+    <div id="dexlist" class="dexg"></div>
+    <button id="dex-back">Zurück</button>
+  </div>
+  <div class="ov off" id="perks">
+    <h1 style="font-size:clamp(28px,8vw,46px)">PERKS</h1>
+    <p id="perkpts"></p>
+    <div id="perklist" class="list"></div>
+    <div class="row"><button id="perk-reset" class="sec sm">Zurücksetzen</button></div>
+    <button id="perks-back">Zurück</button>
+  </div>
+  <div class="ov off" id="revive">
+    <h1 style="font-size:clamp(30px,9vw,52px)">AUS?</h1>
+    <p>Alle Herzen weg. Schau ein kurzes Video und mach mit einem Herz weiter.</p>
+    <div class="row col"><button id="rv-yes" class="ad">📺 Weiterspielen</button><button id="rv-no" class="sec">Beenden</button></div>
+  </div>
   <div class="ov off" id="shop">
     <h1 style="font-size:clamp(34px,10vw,56px)">ARSENAL</h1>
     <p id="shop-coins" style="font-family:var(--font);font-size:clamp(18px,5vw,26px);color:var(--gold)"></p>
@@ -172,7 +245,7 @@
 const W = 540, H = 960;
 let ROUND = 90;
 let MAG = 6, RELOAD = 1.0;
-const DPR = Math.min(2, window.devicePixelRatio || 1);
+let DPR = Math.min(({ high: 2, mid: 1.5, low: 1 })[(() => { try { return (JSON.parse(localStorage.getItem("federjagd.save.v2")) || {}).set.gfx; } catch (e) { return "high"; } })()] || 2, window.devicePixelRatio || 1);
 const cv = document.getElementById("c"); let ctx = cv.getContext("2d");
 cv.width = W * DPR; cv.height = H * DPR;
 const $ = id => document.getElementById(id);
@@ -188,9 +261,10 @@ const LAYERS = [
 const MX = 400, MY = 565;
 
 const SAVE_KEY = "federjagd.save.v2";
-let save = { best: 0, coins: 0, owned: ["shotgun"], sel: "shotgun", up: {}, bests: {}, mode: "classic", xp: 0, stats: {}, daily: null, streak: { last: "", n: 0 }, chests: 0, cross: ["red"], crossSel: "red", ach: {}, loc: "zermatt", skins: ["walnut"], skinSel: "walnut", visited: {}, lstars: {} };
+let save = { best: 0, coins: 0, owned: ["shotgun"], sel: "shotgun", up: {}, bests: {}, mode: "classic", xp: 0, stats: {}, daily: null, streak: { last: "", n: 0 }, chests: 0, cross: ["red"], crossSel: "red", ach: {}, loc: "zermatt", skins: ["walnut"], skinSel: "walnut", visited: {}, lstars: {}, set: {}, dex: {}, perks: {}, tut: {}, ch: {}, adc: {} };
 try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s) save = Object.assign(save, s); else { const b = +localStorage.getItem("federjagd.best"); if (b) save.best = b; } } catch (e) {}
 if (save.best && !save.bests.classic) save.bests.classic = save.best;
+save.set = Object.assign({ sfx: .9, music: .55, haptic: true, ctrl: "direct", gfx: "high" }, save.set);
 save.stats = Object.assign({ hits: 0, rounds: 0, gold: 0, boss: 0, bestScore: 0, bestCombo: 0, fever: 0, nukes: 0, cases: 0 }, save.stats);
 const persist = () => { try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {} };
 
@@ -208,32 +282,30 @@ const upLv = (id, k) => (save.up[id] && save.up[id][k]) || 0;
 const upCost = (id, k) => Math.round((150 + WP[id].cost * .2) * (upLv(id, k) + 1) * Math.pow(1.3, upLv(id, k)) / 10) * 10;
 function wstats(id) { const b = WP[id]; return { mag: b.mag + upLv(id, "mag") * b.magStep, reload: Math.max(.35, b.reload * (1 - .1 * upLv(id, "rel"))), rad: b.rad * (1 + .08 * upLv(id, "aim")) }; }
 let curW;
-function applyWeapon() { if (!save.owned.includes(save.sel)) save.sel = "shotgun"; const s = wstats(save.sel); curW = Object.assign({ id: save.sel }, WP[save.sel], { radEff: s.rad }); MAG = s.mag; RELOAD = s.reload; }
-applyWeapon();
+function applyWeapon() { if (!save.owned.includes(save.sel)) save.sel = "shotgun"; const chl = curM && curM.challenge, id = chl ? "shotgun" : save.sel, s = chl ? { mag: WP.shotgun.mag, reload: WP.shotgun.reload, rad: 1 } : wstats(id); curW = Object.assign({ id }, WP[id], { radEff: s.rad * (1 + .04 * pk("eye")) }); MAG = s.mag; RELOAD = Math.max(.3, s.reload * (1 - .06 * pk("reload"))); }
 let eggs = [], splats = [], redFlash = 0, hitMark = 0;
-let run = { hits: 0, gold: 0, clock: 0, eggs: 0, maxCombo: 0, fever: 0, nukes: 0 }, fever = 0, feverT = 0, pu = { slow: 0, double: 0, aim: 0 }, recordPassed = false, nukes = 0, nukeNext = 30, nuking = false, nukeFx = null;
+let run = { hits: 0, gold: 0, clock: 0, eggs: 0, maxCombo: 0, fever: 0, nukes: 0, kills: {} }, fever = 0, feverT = 0, pu = { slow: 0, double: 0, aim: 0 }, recordPassed = false, nukes = 0, nukeNext = 30, nuking = false, nukeFx = null;
 const mulAll = () => (feverT > 0 ? 2 : 1) * (pu.double > 0 ? 2 : 1);
-function gainFever(a) { if (feverT > 0) return; fever = Math.min(1, fever + a); if (fever >= 1) { feverT = 8; run.fever++; ammo = MAG; reloadT = 0; banner = { txt: "FIEBER! x2", life: 1.8 }; sfx("swarm"); shake = 10; flash = .25; } }
+function gainFever(a) { if (feverT > 0) return; fever = Math.min(1, fever + a * (1 + .12 * pk("fever"))); if (fever >= 1) { feverT = 8; run.fever++; ammo = MAG; reloadT = 0; banner = { txt: "FIEBER! x2", life: 1.8 }; sfx("swarm"); buzz([20, 30, 20, 30, 50]); shake = 10; flash = .25; } }
 let recoil = 0, muzzle = 0, shotCd = 0, holding = false, tracers = [], smoke = [], shells = [];
 const MODES = {
   classic:  { name: "Klassik",       ic: "🎯", desc: "90 Sekunden. Sammle so viele Punkte wie möglich.", round: 90, swarm: 30 },
+  challenge:{ name: "Tages-Challenge", ic: "📅", desc: "Heute für alle gleich: gleicher Ort, gleiche Vögel, Basis-Schrotflinte, keine Perks. 60 Sekunden. Ein freier Versuch pro Tag.", round: 60, swarm: 20, challenge: true },
   blitz:    { name: "Blitz",         ic: "⚡", desc: "Nur 45 Sekunden, doppelt so viele Vögel, Punkte x1,5.", round: 45, swarm: 15, spawnMul: .5, cap: 20, scoreMul: 1.5 },
   survival: { name: "Überleben",     ic: "❤️", desc: "Endlos mit 3 Herzen. Ein Rabe kostet ein Herz.", round: 600, swarm: 40, lives: 3 },
   boss:     { name: "Boss-Kampf",    ic: "👑", desc: "Der Riesenvogel wirft Eier und stürzt auf dich zu. 3 Herzen, 75 Sekunden.", round: 75, boss: true, hearts: 3 },
   sniper:   { name: "Scharfschütze", ic: "🔭", desc: "10 Schuss, kein Nachladen. Jeder Treffer gibt einen Schuss zurück. Punkte x2.", round: 120, sniper: true, scoreMul: 2 },
 };
-const MODE_ORDER = ["classic", "blitz", "survival", "boss", "sniper"];
+const MODE_ORDER = ["classic", "challenge", "blitz", "survival", "boss", "sniper"];
 let mode = MODES[save.mode] ? save.mode : "classic", curM = MODES[mode];
+applyWeapon();
 const bestOf = m => save.bests[m] || 0;
 function refreshMenu() { $("hi").textContent = `${save.coins} Münzen · ${WP[save.sel].name}`; }
 function renderModes() {
   const box = $("modes"); box.innerHTML = "";
-  for (const id of MODE_ORDER) {
-    const m = MODES[id], d = document.createElement("div"); d.className = "mode" + (mode === id ? " sel" : "");
-    d.innerHTML = `<span class="ic">${m.ic}</span><span><b>${m.name}</b><small>${m.desc}</small></span><i>Rekord<br>${bestOf(id)}</i>`;
-    d.onclick = () => { mode = id; curM = m; save.mode = id; persist(); renderModes(); };
-    box.appendChild(d);
-  }
+  for (const id of MODE_ORDER) { const m = MODES[id], d = document.createElement("button"); d.className = "mchip" + (mode === id ? " sel" : ""); d.innerHTML = `<span>${m.ic}</span><b>${m.name}</b>`; d.onclick = () => { mode = id; curM = m; save.mode = id; persist(); renderModes(); }; box.appendChild(d); }
+  const m = MODES[mode]; $("mdesc").innerHTML = `${m.desc}<br><b>Rekord ${bestOf(mode)}</b>${m.challenge ? ` · Heute ${save.ch.date === today() ? save.ch.best : "offen"} · Ziel ${chGoal()}` : ""}`;
+  const s = box.querySelector(".sel"); if (s) box.scrollLeft = s.offsetLeft - box.clientWidth / 2 + s.offsetWidth / 2;
 }
 refreshMenu();
 
@@ -244,18 +316,19 @@ const diff = () => state === "play" ? Math.min(1, (ROUND - timeLeft) / (ROUND <=
 const prog = () => state === "menu" ? 0 : Math.min(1, (ROUND - timeLeft) / ROUND);
 
 function start() {
-  if (BGLOC !== save.loc) buildBackground(save.loc); save.visited[save.loc] = true; nukes = 0; nukeNext = 30; nukeFx = null; nuking = false; $("nuke").style.display = "none";
-  applyWeapon(); curM = MODES[mode]; ROUND = curM.round; if (curM.sniper) MAG = 10; state = "play"; score = 0; timeLeft = ROUND; ammo = MAG; reloadT = 0; chickens = []; feathers = []; pops = []; rings = []; sparks = []; spawnT = 0; combo = 0; hits = 0; shots = 0; banner.life = 0; swarmQ = 0; swarmN = 0; swarmNext = curM.swarm || 0; endDelay = 0; bossWon = false; bossT = 2; lives = curM.lives || curM.hearts || 0; eggs = []; splats = []; redFlash = 0; hitMark = 0; run = { hits: 0, gold: 0, clock: 0, eggs: 0, maxCombo: 0, fever: 0, nukes: 0 }; fever = 0; feverT = 0; pu = { slow: 0, double: 0, aim: 0 }; recordPassed = false; holding = false; shotCd = 0; recoil = 0; muzzle = 0; tracers = []; smoke = []; shells = [];
+  paused = false; aimDown = false; $("pausebtn").style.display = "";
+  const rl = runLoc(); if (BGLOC !== rl) buildBackground(rl); save.visited[rl] = true; nukes = 0; nukeNext = NSTEP(); nukeFx = null; nuking = false; $("nuke").style.display = "none";
+  curM = MODES[mode]; applyWeapon(); SRNG = curM.challenge ? rng(hashStr(today() + "c")) : null; revived = false; eventT = srnd(22, 32); goldQ = 0; goldT = 0; ROUND = curM.round; if (curM.sniper) MAG = 10; state = "play"; score = 0; timeLeft = ROUND; ammo = MAG; reloadT = 0; chickens = []; feathers = []; pops = []; rings = []; sparks = []; spawnT = 0; combo = 0; hits = 0; shots = 0; banner.life = 0; swarmQ = 0; swarmN = 0; swarmNext = curM.swarm || 0; endDelay = 0; bossWon = false; bossT = 2; maxLives = (curM.lives || curM.hearts || 0) + (curM.hearts ? pk("heart") : 0); lives = maxLives; eggs = []; splats = []; redFlash = 0; hitMark = 0; run = { hits: 0, gold: 0, clock: 0, eggs: 0, maxCombo: 0, fever: 0, nukes: 0, kills: {} }; fever = 0; feverT = 0; pu = { slow: 0, double: 0, aim: 0 }; recordPassed = false; holding = false; shotCd = 0; recoil = 0; muzzle = 0; tracers = []; smoke = []; shells = [];
   if (curM.boss) spawnBoss(); $("reload").style.display = curM.sniper ? "none" : "";
   OVS.forEach(o => $(o).classList.add("off")); $("end").classList.add("off");
 }
 let starHint = "";
 function finish() {
-  state = "over"; holding = false; feverT = 0;
+  state = "over"; holding = false; feverT = 0; paused = false; $("pausebtn").style.display = "none";
   const prevBest = bestOf(mode), isBest = score > prevBest;
   if (isBest) save.bests[mode] = score;
   const info0 = levelInfo(save.xp), lvl0 = info0.l;
-  const locM = LOCS[save.loc].mult, coinsGain = Math.round(score * (1 + .02 * (lvl0 - 1)) * locM), xpGain = score + hits * 2 + (bossWon ? 300 : 0);
+  const locM = LOCS[runLoc()].mult, coinsGain = Math.round(score * (1 + .02 * (lvl0 - 1)) * locM * (1 + .08 * pk("bounty"))), xpGain = score + hits * 2 + (bossWon ? 300 : 0);
   save.coins += coinsGain; save.xp += xpGain;
   const st = save.stats; st.hits += hits; st.rounds++; st.gold += run.gold; if (bossWon) st.boss++; st.bestScore = Math.max(st.bestScore, score); st.bestCombo = Math.max(st.bestCombo, run.maxCombo); st.fever += run.fever; st.nukes += run.nukes;
   const info1 = levelInfo(save.xp), lines = [];
@@ -270,11 +343,15 @@ function finish() {
   }
   if (!allBefore && save.daily.list.every(m => m.done)) { save.coins += 300; save.chests++; lines.push('<div class="line up">★ Alle Tagesmissionen geschafft: +300 Münzen und 1 Federbox</div>'); }
   // Sterne / Orte
-  { const lid = save.loc, goals = starGoals(lid), sc = Math.round(score * (MODE_F[mode] || 1)), ns = goals.filter(g => sc >= g).length, old = locStars(lid);
+  { const lid = runLoc(), goals = starGoals(lid), sc = Math.round(score * (MODE_F[mode] || 1)), ns = goals.filter(g => sc >= g).length, old = locStars(lid);
     if (ns > old) { save.lstars[lid] = ns; const rw = Math.round(100 * (ns - old) * LOCS[lid].tier); save.coins += rw; lines.push(`<div class="line ok">${"★".repeat(ns)}${"☆".repeat(3 - ns)} ${LOCS[lid].name} (+${rw} Münzen)</div>`);
       if (ns === 3) { save.chests++; lines.push('<div class="line up">★★★ Alle Sterne: +1 Federbox</div>'); }
       if (old === 0) { const nx = LOC_ORDER_E[LOCS[lid].idx + 1]; if (nx) lines.push(`<div class="line up">🔓 Neuer Ort: ${LOCS[nx].name}${countryOf(nx).id !== countryOf(lid).id ? " in " + countryOf(nx).flag + " " + countryOf(nx).name + " (neue Länder-Kiste!)" : ""}</div>`); } }
     starHint = ns < 3 ? `Noch ${goals[ns] - sc} Punkte bis ${ns + 1} ★ in ${LOCS[lid].name}` : ""; }
+  // Vogeldex
+  for (const [sp, nm] of DEX) { const add = run.kills[sp] || 0; if (!add) continue; const old = save.dex[sp] || 0, nw = old + add; save.dex[sp] = nw; for (let k = 0; k < 4; k++) if (old < DEX_MS[k] && nw >= DEX_MS[k]) { save.coins += DEX_RW[k]; if (k === 3) save.chests++; lines.push(`<div class="line ok">📖 Vogeldex ${nm} x${DEX_MS[k]}: +${DEX_RW[k]} Münzen${k === 3 ? " und 1 Federbox" : ""}</div>`); } }
+  // Tages-Challenge
+  if (curM.challenge) { const d = today(); if (save.ch.date !== d) save.ch = { date: d, best: 0, tries: 0 }; save.ch.tries++; save.ch.best = Math.max(save.ch.best, score); const goal = chGoal(); if (score >= goal && !save.ch.won) { save.ch.won = true; save.chests++; lines.push('<div class="line up">📅 Tagesziel geschafft: +1 Federbox</div>'); } lines.push(`<div class="line">📅 Heute: ${save.ch.best} Punkte · Ziel ${goal} · ${LOCS[chLoc()].name}</div>`); chExtra = false; }
   // Erfolge
   for (const a of ACH) if (!save.ach[a.id] && a.f(save.stats)) { save.ach[a.id] = true; save.coins += a.r; lines.push(`<div class="line ok">🏆 Erfolg: ${a.n} (+${a.r} Münzen)</div>`); }
   if (info1.l > lvl0) sfx("levelup");
@@ -293,8 +370,9 @@ function finish() {
   $("end-t").textContent = `${curM.name}: ${score} Punkte · ${hits} Treffer · ${acc} % Trefferquote${curM.lives ? " · " + secs + " s überlebt" : ""} · Beste Serie ${run.maxCombo}`;
   const p0 = info0.cur / info0.need * 100, p1 = info1.cur / info1.need * 100;
   $("end-extra").innerHTML = `<div class="xp"><div class="xpl"><span>Rang ${info1.l} · ${rankName(info1.l)}</span><span>+${xpGain} XP</span></div><div class="bar"><i id="xpfill" style="width:${info1.l > lvl0 ? 0 : p0}%"></i></div></div>
-    <div class="line">🪙 +${coinsGain} Münzen${lvl0 > 1 ? ` (Rangbonus +${(lvl0 - 1) * 2} %)` : ""}${locM > 1 ? ` · ${LOCS[save.loc].name} x${locM}` : ""}</div>${lines.join("")}${hints.slice(0, 3).map(x => `<div class="hint">${x}</div>`).join("")}`;
+    <div class="line">🪙 +${coinsGain} Münzen${lvl0 > 1 ? ` (Rangbonus +${(lvl0 - 1) * 2} %)` : ""}${locM > 1 ? ` · ${LOCS[runLoc()].name} x${locM}` : ""}</div>${lines.join("")}${hints.slice(0, 3).map(x => `<div class="hint">${x}</div>`).join("")}`;
   setTimeout(() => { const f = $("xpfill"); if (f) f.style.width = p1 + "%"; }, 90);
+  lastCoins = coinsGain; { const ab = $("ad2x"); ab.style.display = coinsGain >= 20 ? "" : "none"; ab.textContent = `📺 Münzen verdoppeln (+${coinsGain})`; ab.disabled = false; }
   $("nuke").style.display = "none"; const cb = $("chestbtn2"); cb.style.display = save.chests > 0 ? "" : "none"; cb.textContent = `📦 Öffnen (${save.chests})`;
   $("end").classList.remove("off");
 }
@@ -302,12 +380,12 @@ function finish() {
 // ---------- Audio ----------
 let ac;
 // ---------- Sound-Engine (synthetisierte Schüsse) ----------
-let AC = null, MASTER, REV, NOISE;
+let AC = null, MASTER, REV, NOISE, COMP;
 function audioInit() {
   if (AC) { if (AC.state === "suspended") AC.resume(); return AC; }
   const C = window.AudioContext || window.webkitAudioContext; AC = new C();
   const comp = AC.createDynamicsCompressor(); comp.threshold.value = -16; comp.knee.value = 14; comp.ratio.value = 10; comp.attack.value = .002; comp.release.value = .2;
-  MASTER = AC.createGain(); MASTER.gain.value = .95; MASTER.connect(comp); comp.connect(AC.destination);
+  MASTER = AC.createGain(); MASTER.gain.value = save.set.sfx; MASTER.connect(comp); comp.connect(AC.destination); COMP = comp;
   const len = (AC.sampleRate * 1.7) | 0, ir = AC.createBuffer(2, len, AC.sampleRate);
   for (let c = 0; c < 2; c++) { const d = ir.getChannelData(c); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.4); }
   REV = AC.createConvolver(); REV.buffer = ir; const rg = AC.createGain(); rg.gain.value = .42; REV.connect(rg); rg.connect(MASTER);
@@ -318,14 +396,14 @@ function nz(t0, dur, o = {}) {
   const { type = "lowpass", f0 = 2000, f1 = 300, q = 1, g = .5, wet = .2, att = .002 } = o;
   const s = AC.createBufferSource(); s.buffer = NOISE; const f = AC.createBiquadFilter(); f.type = type; f.Q.value = q; f.frequency.setValueAtTime(f0, t0); f.frequency.exponentialRampToValueAtTime(Math.max(30, f1), t0 + dur);
   const gn = AC.createGain(); gn.gain.setValueAtTime(.0001, t0); gn.gain.linearRampToValueAtTime(g, t0 + att); gn.gain.exponentialRampToValueAtTime(.0008, t0 + dur);
-  s.connect(f); f.connect(gn); gn.connect(MASTER); if (wet) { const w = AC.createGain(); w.gain.value = wet; gn.connect(w); w.connect(REV); }
+  s.connect(f); f.connect(gn); gn.connect(o.out || MASTER); if (wet && !o.out) { const w = AC.createGain(); w.gain.value = wet; gn.connect(w); w.connect(REV); }
   s.start(t0, Math.random() * 1.5, dur + .05);
 }
 function tone(t0, dur, o = {}) {
   const { type = "sine", f0 = 120, f1 = 40, g = .6, wet = .08, att = .002 } = o;
   const os = AC.createOscillator(); os.type = type; os.frequency.setValueAtTime(f0, t0); os.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t0 + dur);
   const gn = AC.createGain(); gn.gain.setValueAtTime(.0001, t0); gn.gain.linearRampToValueAtTime(g, t0 + att); gn.gain.exponentialRampToValueAtTime(.0008, t0 + dur);
-  os.connect(gn); gn.connect(MASTER); if (wet) { const w = AC.createGain(); w.gain.value = wet; gn.connect(w); w.connect(REV); } os.start(t0); os.stop(t0 + dur + .05);
+  os.connect(gn); gn.connect(o.out || MASTER); if (wet && !o.out) { const w = AC.createGain(); w.gain.value = wet; gn.connect(w); w.connect(REV); } os.start(t0); os.stop(t0 + dur + .05);
 }
 const SND = {
   shotgun(t, v = 1) { nz(t, .07, { type: "highpass", f0: 4200, f1: 900, g: .9 * v, wet: .15 }); nz(t, .55, { f0: 1500, f1: 80, g: v, wet: .55, q: .7 }); tone(t, .34, { f0: 170, f1: 40, g: v, wet: .2 }); nz(t + .04, .24, { type: "bandpass", f0: 700, f1: 240, q: 1.2, g: .4 * v, wet: .4 }); },
@@ -343,8 +421,8 @@ const SND = {
   dry(t) { tone(t, .03, { type: "square", f0: 2400, f1: 1000, g: .14, wet: .05 }); nz(t, .03, { type: "highpass", f0: 5000, f1: 2500, g: .12 }); },
 };
 const SND_MAP = {
-  shot: t => { SND[curW.id](t); if (curW.blast) { SND.boom(t + .14); } },
-  boom: t => SND.boom(t), hit: t => SND.hit(t), click: t => SND.reload(t), ready: t => SND.ready(t), dry: t => SND.dry(t),
+  shot: t => { SND[curW.id](t); if (curW.blast) { SND.boom(t + .14); } buzz(curW.blast ? [40, 20, 70] : curW.auto ? 7 : curW.id === "repeater" ? 14 : 22); },
+  boom: t => { SND.boom(t); buzz([60, 30, 110]); }, hit: t => { SND.hit(t); buzz(9); }, click: t => SND.reload(t), ready: t => SND.ready(t), dry: t => SND.dry(t),
 };
 function sfx(kind) {
   try {
@@ -380,7 +458,7 @@ PAL.gift = Object.assign({}, PAL.hen, { base: ["#ffc2de", "#e0609a", "#8a2a5c"],
 PAL.boss = Object.assign({}, PAL.rooster, { glow: "rgba(255,70,40,.55)", cs: 1.8 });
 function spawnBoss() { spawn("boss"); const c = chickens[chickens.length - 1]; c.x = W / 2; c.y0 = 330; c.y = -260; c.vx = 95; c.amp = 45; c.fq = 1.2; c.flap = 7; c.bm = "intro"; banner = { txt: "ACHTUNG: BOSS!", life: 2.2 }; sfx("roar"); }
 function damagePlayer(n, x, y) {
-  lives = Math.max(0, lives - n); redFlash = .7; shake = 20; combo = 0; sfx("bad");
+  buzz([40, 40, 70]); lives = Math.max(0, lives - n); redFlash = .7; shake = 20; combo = 0; sfx("bad");
   splats.push({ x: Math.max(60, Math.min(W - 60, x)), y: H - 130 + rnd(-60, 40), life: 4.5, r: rnd(46, 74), seed: Math.random() * 9 });
   pops.push({ x: Math.max(80, Math.min(W - 80, x)), y: H - 220, txt: n > 1 ? "-2 Herzen" : "-1 Herz", life: 1.3, col: "#ff8a9a", big: true });
   if (lives <= 0 && endDelay <= 0) endDelay = 1;
@@ -388,7 +466,7 @@ function damagePlayer(n, x, y) {
 function throwEggs(c) {
   const bomb = c.atk === "bomb", n = bomb ? 1 : (c.enraged ? 5 : 3), sx = c.x + c.dir * 30, sy = c.y + 30;
   for (let i = 0; i < n; i++) {
-    const tx = W / 2 + (i - (n - 1) / 2) * 76 + rnd(-24, 24), ty = H - 80, dx = tx - sx, dy = ty - sy, d = Math.hypot(dx, dy), sp = (bomb ? 190 : (c.enraged ? 290 : 250)) * (1 + (LOCS[save.loc].tier - 1) * .25);
+    const tx = W / 2 + (i - (n - 1) / 2) * 76 + rnd(-24, 24), ty = H - 80, dx = tx - sx, dy = ty - sy, d = Math.hypot(dx, dy), sp = (bomb ? 190 : (c.enraged ? 290 : 250)) * (1 + (LOCS[runLoc()].tier - 1) * .25);
     eggs.push({ x: sx, y: sy, y0: sy, vx: dx / d * sp, vy: dy / d * sp, rot: 0, type: bomb ? "bomb" : "egg", hp: bomb ? 2 : 1, r: bomb ? 24 : 16, s: .55, dead: false, flash: 0 });
   }
   sfx("whoosh");
@@ -405,7 +483,7 @@ function hitEgg(e, dmg) {
 }
 function bossStep(c, dt) {
   c.t2 += dt; c.ph += dt * c.flap; c.modeT = (c.modeT || 0) - dt; c.shakeX = 0;
-  const m = c.bm || "patrol", calm = () => { c.bm = "patrol"; c.atkT = (c.enraged ? rnd(1.1, 1.9) : rnd(2, 3.1)) / (1 + (LOCS[save.loc].tier - 1) * .35); };
+  const m = c.bm || "patrol", calm = () => { c.bm = "patrol"; c.atkT = (c.enraged ? rnd(1.1, 1.9) : rnd(2, 3.1)) / (1 + (LOCS[runLoc()].tier - 1) * .35); };
   if (m === "intro") { c.y += (c.y0 - c.y) * Math.min(1, dt * 2.2); if (Math.abs(c.y - c.y0) < 8) calm(); return; }
   if (m === "patrol") {
     c.x += c.vx * dt; if (c.x < 100) c.vx = Math.abs(c.vx); if (c.x > W - 100) c.vx = -Math.abs(c.vx); c.dir = c.vx > 0 ? 1 : -1;
@@ -424,31 +502,31 @@ function bossStep(c, dt) {
   if (m === "stun") { c.y += (c.y0 - 40 - c.y) * Math.min(1, dt * 3); c.x += c.vx * .2 * dt; if (c.x < 100 || c.x > W - 100) c.vx *= -1; if (c.modeT <= 0) calm(); return; }
 }
 function pickSpecies() {
-  const el = (ROUND - timeLeft) * (90 / Math.min(ROUND, 90)), r = Math.random();
+  const el = (ROUND - timeLeft) * (90 / Math.min(ROUND, 90)), r = SR();
   if (r < .03) return "gold";
   if (r < .06) return "clock";
   if (r < .095) return "gift";
-  const ex = (LOCS[save.loc].tier - 1) * .05;
+  const ex = (LOCS[runLoc()].tier - 1) * .05;
   if (el > 4 && r < .19 + ex) return "crow";
   if (el > 10 && r < .32 + ex) return "chick";
   if (el > 18 && r < .42 + ex) return "rooster";
   return "hen";
 }
 function spawn(sp = pickSpecies()) {
-  const tier = LOCS[save.loc].tier, d = diff(), mul = 1 + .5 * d + (tier - 1) * .55 + (mode === "survival" ? Math.max(0, Math.min(.6, (ROUND - timeLeft - 70) / 150)) : 0), dir = Math.random() < .5 ? 1 : -1;
-  let li = (Math.random() * 3) | 0, k = { pts: 0, hp: 1, hx: 36, hy: 28, sp: 1, sc: 1, amp: 0, fq: 0, dash: 0 };
+  const tier = LOCS[runLoc()].tier, d = diff(), mul = 1 + .5 * d + (tier - 1) * .55 + (mode === "survival" ? Math.max(0, Math.min(.6, (ROUND - timeLeft - 70) / 150)) : 0), dir = SR() < .5 ? 1 : -1;
+  let li = (SR() * 3) | 0, k = { pts: 0, hp: 1, hx: 36, hy: 28, sp: 1, sc: 1, amp: 0, fq: 0, dash: 0 };
   if (sp === "gold") { li = 0; k.sp = 1.7; k.pts = 50; k.sc = 1.15; k.amp = 45; k.fq = 3; }
   else if (sp === "clock") { li = 1; k.sp = 1.2; k.pts = 10; k.amp = 50; k.fq = 2.5; }
-  else if (sp === "chick") { li = 1 + ((Math.random() * 2) | 0); k.sp = 1.5; k.pts = 40; k.hx = 24; k.hy = 24; k.sc = 1.15; k.amp = rnd(70, 110); k.fq = rnd(4, 6); }
-  else if (sp === "rooster") { li = 1 + ((Math.random() * 2) | 0); k.sp = .7; k.pts = 40; k.hp = 2; k.sc = 1.3; k.hx = 42; k.hy = 32; k.dash = 1; }
+  else if (sp === "chick") { li = 1 + ((SR() * 2) | 0); k.sp = 1.5; k.pts = 40; k.hx = 24; k.hy = 24; k.sc = 1.15; k.amp = srnd(70, 110); k.fq = srnd(4, 6); }
+  else if (sp === "rooster") { li = 1 + ((SR() * 2) | 0); k.sp = .7; k.pts = 40; k.hp = 2; k.sc = 1.3; k.hx = 42; k.hy = 32; k.dash = 1; }
   else if (sp === "gift") { li = 1; k.pts = 20; k.amp = 30; k.fq = 2; k.sc = 1.05; }
-  else if (sp === "boss") { li = 1; k.sp = 0; k.hp = Math.round(45 * (1 + (LOCS[save.loc].tier - 1) * .45)); k.hx = 44; k.hy = 34; k.sc = 2.63; k.pts = 100; }
-  else if (sp === "crow") { k.sp = 1.35; k.sc = 1.05; k.hx = 34; k.hy = 24; if (Math.random() < .5) { k.amp = 30; k.fq = 2.5; } }
-  else { k.pts = LAYERS[li].pts; if (Math.random() < .3 + d * .3) { k.amp = rnd(30, 70); k.fq = rnd(2, 3.4); } }
-  const L = LAYERS[li], y0 = rnd(L.y[0], L.y[1]);
+  else if (sp === "boss") { li = 1; k.sp = 0; k.hp = Math.round(45 * (1 + (LOCS[runLoc()].tier - 1) * .45)); k.hx = 44; k.hy = 34; k.sc = 2.63; k.pts = 100; }
+  else if (sp === "crow") { k.sp = 1.35; k.sc = 1.05; k.hx = 34; k.hy = 24; if (SR() < .5) { k.amp = 30; k.fq = 2.5; } }
+  else { k.pts = LAYERS[li].pts; if (SR() < .3 + d * .3) { k.amp = srnd(30, 70); k.fq = srnd(2, 3.4); } }
+  const L = LAYERS[li], y0 = srnd(L.y[0], L.y[1]);
   chickens.push({
-    sp, li, gold: sp === "gold", x: dir > 0 ? -100 : W + 100, y: y0, y0, vx: dir * rnd(L.speed[0], L.speed[1]) * k.sp * mul, dir, ph: Math.random() * 7, t2: Math.random() * 6, bob: rnd(.5, 1.2),
-    dead: false, vy: 0, rot: 0, s: L.scale * k.sc, pts: k.pts, hp: k.hp, maxhp: k.hp, hx: k.hx, hy: k.hy, amp: k.amp, fq: k.fq, dash: k.dash, flash: 0, flap: rnd(8, 12) * (sp === "chick" ? 1.6 : 1),
+    sp, li, gold: sp === "gold", x: dir > 0 ? -100 : W + 100, y: y0, y0, vx: dir * srnd(L.speed[0], L.speed[1]) * k.sp * mul, dir, ph: SR() * 7, t2: SR() * 6, bob: srnd(.5, 1.2),
+    dead: false, vy: 0, rot: 0, s: L.scale * k.sc, pts: k.pts, hp: k.hp, maxhp: k.hp, hx: k.hx, hy: k.hy, amp: k.amp, fq: k.fq, dash: k.dash, flash: 0, flap: srnd(8, 12) * (sp === "chick" ? 1.6 : 1),
   });
 }
 
@@ -457,7 +535,7 @@ function pose() {
   const L = curW.len * 1.3 - recoil * 18; return { px, py, a, tx: px + Math.cos(a) * L, ty: py + Math.sin(a) * L };
 }
 function shoot(x, y) {
-  if (shotCd > 0) return;
+  if (shotCd > 0 || paused) return;
   if (ammo <= 0 && feverT <= 0) { sfx("dry"); if (reloadT <= 0) reload(); return; }
   if (reloadT > 0 && feverT <= 0) return;
   if (feverT <= 0) ammo--; shots++; shotCd = curW.cd * (feverT > 0 ? .65 : 1); flash = curW.blast ? .14 : .06; shake = curW.blast ? 10 : 4; kick = 1; recoil = 1; muzzle = .09; sfx("shot");
@@ -504,7 +582,7 @@ function hitChicken(c, dmg = 1) {
   }
   const burst = (n, cols) => { for (let i = 0; i < n; i++) feathers.push({ x: c.x, y: c.y, vx: rnd(-220, 220), vy: rnd(-260, 60), r: rnd(0, 6), life: rnd(.8, 1.6), col: cols[(Math.random() * cols.length) | 0], sz: rnd(.8, 1.4) * c.s + .3 }); };
   if (c.hp > 0) { c.flash = .25; burst(8, ["#f2e3c0", "#ff9a4a"]); rings.push({ x: c.x, y: c.y, r: 6, life: .25, col: "255,255,255" }); pops.push({ x: c.x, y: c.y - 40 * c.s, txt: c.sp === "boss" ? "" : "Au!", life: .7, col: "#ffd0a0" }); sfx("hit"); shake = 6; hitStop = .04; return; }
-  c.dead = true; c.vy = -160; c.vx *= .3;
+  c.dead = true; c.vy = -160; c.vx *= .3; run.kills[c.sp] = (run.kills[c.sp] || 0) + 1;
   if (dark) {
     score = Math.max(0, score - 20); combo = 0; shake = 14;
     pops.push({ x: c.x, y: c.y - 34 * c.s, txt: "-20", life: 1.1, col: "#ff6a5a", big: true });
@@ -524,7 +602,7 @@ function hitChicken(c, dmg = 1) {
   pops.push({ x: c.x, y: c.y - 34 * c.s, txt: "+" + p + (mult > 1 ? " x" + mult : ""), life: 1, col: c.gold ? "#ffe066" : "#fff", big: c.gold || mult > 1 });
   if (c.sp === "clock") {
     const tx = (curM.lives || curM.hearts) ? "+1 Herz" : curM.sniper ? "+3 Schuss" : "+4 s";
-    if (curM.lives || curM.hearts) lives = Math.min(3, lives + 1); else if (curM.sniper) ammo = Math.min(MAG, ammo + 3); else timeLeft += 4;
+    if (curM.lives || curM.hearts) lives = Math.min(maxLives, lives + 1); else if (curM.sniper) ammo = Math.min(MAG, ammo + 3); else timeLeft += 4;
     pops.push({ x: c.x, y: c.y - 74 * c.s, txt: tx, life: 1.2, col: "#8fe9ff", big: true });
   }
   rings.push({ x: c.x, y: c.y, r: 6, life: .35, col: c.gold ? "255,220,80" : "255,255,255" });
@@ -534,11 +612,11 @@ function hitChicken(c, dmg = 1) {
 const PUS = [["slow", "ZEITLUPE", 6, "#8fd0ff"], ["double", "DOPPELTE PUNKTE", 10, "#ffe066"], ["aim", "ZIELHILFE", 8, "#9bff9b"], ["ammo", "VOLLE MUNITION", 0, "#ffcf3a"]];
 function givePU(c) {
   const [k, nm, d, col] = PUS[(Math.random() * PUS.length) | 0];
-  if (k === "ammo") { ammo = MAG; reloadT = 0; } else pu[k] = d;
+  if (k === "ammo") { ammo = MAG; reloadT = 0; } else pu[k] = d * (1 + .12 * pk("pu"));
   pops.push({ x: c.x, y: c.y - 70 * c.s, txt: nm, life: 1.7, col, big: true });
   rings.push({ x: c.x, y: c.y, r: 8, life: .5, col: "255,255,255" }); sfx("gold");
 }
-function reload() { if (curM.sniper || reloadT > 0 || ammo === MAG) return; reloadT = RELOAD; sfx("click"); }
+function reload() { if (paused || curM.sniper || reloadT > 0 || ammo === MAG) return; reloadT = RELOAD; sfx("click"); }
 
 // ---------- Update ----------
 function update(dt) {
@@ -568,7 +646,7 @@ function update(dt) {
   if (state !== "play") { for (const c of chickens) stepChicken(c, dt); chickens = chickens.filter(c => c.x > -160 && c.x < W + 160 && c.y < H + 100); return; }
 
   if (curM.sniper) { if (ammo <= 0 && endDelay <= 0) endDelay = 1.4; else if (ammo > 0) endDelay = 0; }
-  if (endDelay > 0) { endDelay -= dt; if (endDelay <= 0) { finish(); return; } }
+  if (endDelay > 0) { endDelay -= dt; if (endDelay <= 0) { if ((curM.hearts || curM.lives) && lives <= 0 && !revived) { askRevive(); return; } finish(); return; } }
   const sdt = pu.slow > 0 ? dt * .5 : dt;
   for (const e of eggs) {
     e.x += e.vx * sdt; e.y += e.vy * sdt; e.rot += dt * 7; e.flash = Math.max(0, e.flash - dt); e.s = .55 + .7 * Math.max(0, Math.min(1, (e.y - e.y0) / (H - 80 - e.y0)));
@@ -579,7 +657,7 @@ function update(dt) {
   for (const k of ["slow", "double", "aim"]) pu[k] = Math.max(0, pu[k] - dt);
   if (feverT > 0) { feverT -= dt; ammo = MAG; if (feverT <= 0) { feverT = 0; fever = 0; } } else fever = Math.max(0, fever - .02 * dt);
   run.maxCombo = Math.max(run.maxCombo, combo);
-  if (combo === 0) nukeNext = 30; else if (combo >= nukeNext) { nukeNext += 30; nukes = Math.min(2, nukes + 1); banner = { txt: "NUKE BEREIT!", life: 2 }; sfx("levelup"); shake = 8; }
+  if (combo === 0) nukeNext = NSTEP(); else if (combo >= nukeNext) { nukeNext += NSTEP(); nukes = Math.min(2, nukes + 1); banner = { txt: "NUKE BEREIT!", life: 2 }; sfx("levelup"); shake = 8; }
   { const nb = $("nuke"); nb.style.display = nukes > 0 ? "" : "none"; nb.textContent = "☢ NUKE" + (nukes > 1 ? " x" + nukes : ""); }
   if (!recordPassed && bestOf(mode) > 0 && score > bestOf(mode)) { recordPassed = true; banner = { txt: "NEUER REKORD!", life: 2 }; sfx("gold"); for (let i = 0; i < 40; i++) feathers.push({ x: rnd(0, W), y: -10, vx: rnd(-40, 40), vy: rnd(60, 200), r: rnd(0, 6), life: rnd(1.5, 3), col: ["#ffd84a", "#ff5fa8", "#5ab0ff", "#6fe07a"][(Math.random() * 4) | 0], sz: 1 }); }
   redFlash = Math.max(0, redFlash - dt); hitMark = Math.max(0, hitMark - dt); for (const s of splats) s.life -= dt; splats = splats.filter(s => s.life > 0);
@@ -587,11 +665,13 @@ function update(dt) {
   if (timeLeft <= 0) { timeLeft = 0; finish(); return; }
   if (reloadT > 0) { reloadT -= dt; if (reloadT <= 0) { ammo = MAG; sfx("ready"); } }
   if (swarmNext && ROUND - timeLeft >= swarmNext) { swarmNext += curM.swarm; swarmN++; swarmQ = Math.min(20, 6 + 3 * swarmN); banner = { txt: swarmN > 1 ? "GROSSER SCHWARM!" : "SCHWARM!", life: 1.8 }; sfx("swarm"); }
-  if (swarmQ > 0) { swarmT -= dt; if (swarmT <= 0) { spawn(Math.random() < .25 ? "chick" : "hen"); swarmQ--; swarmT = .17; } }
+  tutorialTick(dt);
+  if (curM.swarm) { eventT -= dt; if (eventT <= 0) { eventT = srnd(26, 40); goldQ = 6 + ((LOCS[runLoc()].tier * 2) | 0); banner = { txt: "GOLDRAUSCH!", life: 1.8 }; sfx("gold"); } if (goldQ > 0) { goldT -= dt; if (goldT <= 0) { spawn("gold"); goldQ--; goldT = .3; } } }
+  if (swarmQ > 0) { swarmT -= dt; if (swarmT <= 0) { spawn(SR() < .25 ? "chick" : "hen"); swarmQ--; swarmT = .17; } }
   if (holding && curW.auto) shoot(mouse.x, mouse.y);
   spawnT -= dt; const d = diff();
-  if (curM.boss) { bossT -= dt; if (bossT <= 0 && chickens.length < 9) { spawn(Math.random() < .12 ? "clock" : Math.random() < .3 ? "chick" : "hen"); bossT = rnd(1.6, 2.6); } }
-  else if (spawnT <= 0 && chickens.length < (curM.cap || 16)) { spawn(); spawnT = rnd(.3, 1.0) * (1.25 - .55 * d) * (curM.spawnMul || 1) / (1 + (LOCS[save.loc].tier - 1) * .8); }
+  if (curM.boss) { bossT -= dt; if (bossT <= 0 && chickens.length < 9) { spawn(SR() < .12 ? "clock" : SR() < .3 ? "chick" : "hen"); bossT = srnd(1.6, 2.6); } }
+  else if (spawnT <= 0 && chickens.length < (curM.cap || 16)) { spawn(); spawnT = srnd(.3, 1.0) * (1.25 - .55 * d) * (curM.spawnMul || 1) / (1 + (LOCS[runLoc()].tier - 1) * .8); }
   for (const c of chickens) stepChicken(c, sdt);
   chickens = chickens.filter(c => c.x > -160 && c.x < W + 160 && c.y < H + 100);
 }
@@ -949,7 +1029,8 @@ function buildBackground(id) {
   const o = makeLoc(LOCS[id] ? id : "zermatt"); Object.assign(BG, o.layers); LM = o.lm; BGLOC = id; birdTheme = LOCS[id] ? LOCS[id].birds : "hen";
 }
 let BGLOC = "";
-BG.vig = layer(x => { const g = x.createRadialGradient(W / 2, H / 2, H * .3, W / 2, H / 2, H * .75); g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(1, "rgba(5,10,30,.5)"); x.fillStyle = g; x.fillRect(0, 0, W, H); });
+function buildVig() { BG.vig = layer(x => { const g = x.createRadialGradient(W / 2, H / 2, H * .3, W / 2, H / 2, H * .75); g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(1, "rgba(5,10,30,.5)"); x.fillStyle = g; x.fillRect(0, 0, W, H); }); }
+buildVig();
 const GL = Array.from({ length: 80 }, (_, i) => ({ a: (i * 97 % 100) / 100, b: (i * 57 % 100) / 100, l: 10 + (i * 13 % 24), p: i * 1.7 }));
 function drawWater(w) {
   if (!w) return; const [y0, y1] = w, sx = 410; ctx.save(); ctx.beginPath(); ctx.rect(0, y0, W, y1 - y0); ctx.clip();
@@ -1043,8 +1124,8 @@ LOCS.kinderdijk.meadow = "tulip";
 const LOC_ORDER_E = COUNTRIES.flatMap(c => c.places);
 LOC_ORDER_E.forEach((id, i) => { const L = LOCS[id]; L.idx = i; L.tier = 1 + i * .06; L.mult = Math.round((1 + i * .12) * 10) / 10; L.country = COUNTRIES.find(c => c.places.includes(id)).id; });
 const countryOf = id => COUNTRIES.find(c => c.id === LOCS[id].country);
-const starGoals = id => [220, 480, 850].map(g => Math.round(g * Math.pow(LOCS[id].tier, 1.25) / 10) * 10);
-const MODE_F = { classic: 1, blitz: .8, survival: .8, boss: 1.1, sniper: .7 };
+const starGoals = id => [240, 520, 900].map(g => Math.round(g * Math.pow(LOCS[id].tier, .95) / 10) * 10);
+const MODE_F = { challenge: 1, classic: 1, blitz: .8, survival: .8, boss: 1.1, sniper: .7 };
 const locStars = id => (save.lstars && save.lstars[id]) || 0;
 const locUnlocked = id => { const i = LOC_ORDER_E.indexOf(id); return i === 0 || locStars(LOC_ORDER_E[i - 1]) >= 1; };
 const countryUnlocked = c => locUnlocked(c.places[0]);
@@ -1541,13 +1622,14 @@ function draw() {
   if (flash > 0) { ctx.fillStyle = `rgba(255,240,190,${flash * 2.2})`; ctx.fillRect(0, 0, W, H); }
   if (pg > 0) { ctx.globalCompositeOperation = "multiply"; ctx.fillStyle = `rgba(255,${200 - pg * 70 | 0},${170 - pg * 100 | 0},${pg * .5})`; ctx.fillRect(0, 0, W, H); ctx.globalCompositeOperation = "source-over"; }
   ctx.restore();
+  drawWeather();
   ctx.drawImage(BG.vig, 0, 0, W, H);
   drawSplats();
   drawNuke();
   if (pu.slow > 0) { ctx.fillStyle = "rgba(120,180,255,.12)"; ctx.fillRect(0, 0, W, H); }
   if (feverT > 0) { const g2 = ctx.createRadialGradient(W / 2, H / 2, H * .3, W / 2, H / 2, H * .72); g2.addColorStop(0, "rgba(255,160,30,0)"); g2.addColorStop(1, `rgba(255,150,20,${.5 + .15 * Math.sin(t * 16)})`); ctx.fillStyle = g2; ctx.fillRect(0, 0, W, H); }
   if (redFlash > 0) { const g = ctx.createRadialGradient(W / 2, H / 2, H * .25, W / 2, H / 2, H * .7); g.addColorStop(0, "rgba(255,30,30,0)"); g.addColorStop(1, `rgba(255,30,30,${Math.min(.75, redFlash * 1.1)})`); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); }
-  hud();
+  hud(); drawTip();
   if (state === "play") crosshair();
 }
 
@@ -1576,10 +1658,10 @@ function hud() {
   if (fv > .01) { plate(14, 82, Math.max(8, 166 * fv), 12, 6); const fg = ctx.createLinearGradient(14, 0, 180, 0); fg.addColorStop(0, feverT > 0 ? "#ff7a1c" : "#ffb11c"); fg.addColorStop(1, feverT > 0 ? "#ffe14d" : "#ffe066"); ctx.fillStyle = fg; ctx.fill(); }
   txt(feverT > 0 ? "FIEBER x2" : "FIEBER", 97, 89, 13, "center", "#fff7e0");
   { let px = W / 2 - 50, py = 78; for (const [k, nm, , col] of PUS) if (pu[k] > 0) { plate(px - 52, py, 104, 20, 10); ctx.fillStyle = "rgba(14,22,40,.75)"; ctx.fill(); txt(nm.split(" ")[0] + " " + Math.ceil(pu[k]) + "s", px, py + 11, 13, "center", col); py += 24; } }
-  if (curM.lives || curM.hearts) for (let i = 0; i < 3; i++) heart(W / 2 - 40 + i * 40, 44, 14, i < lives);
+  if (curM.lives || curM.hearts) for (let i = 0; i < maxLives; i++) heart(W / 2 - (maxLives - 1) * 20 + i * 40, 44, 14, i < lives);
   const boss = chickens.find(c => c.sp === "boss" && !c.dead);
   if (boss && state === "play") { plate(60, 112, 420, 26, 13); ctx.fillStyle = "rgba(14,22,40,.7)"; ctx.fill(); plate(64, 116, Math.max(10, 412 * boss.hp / boss.maxhp), 18, 9); ctx.fillStyle = boss.enraged ? "#ff3a2a" : "#ff9a1c"; ctx.fill(); txt(boss.bm === "stun" ? "BETÄUBT  x2" : "BOSS-" + (birdTheme === "pigeon" ? "TAUBE" : "HAHN"), W / 2, 98, 20, "center", boss.bm === "stun" ? "#ffe14d" : "#ffcf3a"); }
-  if (state === "play" && combo >= 3) { const mult = 1 + Math.min(3, Math.floor(combo / 5)), sc = 1 + Math.sin(t * 10) * .04; ctx.save(); ctx.translate(W / 2, curM.boss ? 172 : 104); ctx.scale(sc, sc); plate(-82, -18, 164, 36, 18); ctx.fillStyle = mult > 1 ? "#ff8a1c" : "#e8452e"; ctx.fill(); ctx.strokeStyle = "#fff"; ctx.lineWidth = 2.5; ctx.stroke(); txt(`SERIE ${combo}${mult > 1 ? "  ·  x" + mult : ""}`, 0, 1, 22, "center"); plate(-70, 24, 140, 9, 4); ctx.fillStyle = "rgba(0,0,0,.55)"; ctx.fill(); plate(-70, 24, Math.max(6, 140 * Math.min(1, (combo - (nukeNext - 30)) / 30)), 9, 4); ctx.fillStyle = "#ff5a3a"; ctx.fill(); txt("☢ " + nukeNext, 0, 46, 15, "center", "#ffb08a"); ctx.restore(); }
+  if (state === "play" && combo >= 3) { const mult = 1 + Math.min(3, Math.floor(combo / 5)), sc = 1 + Math.sin(t * 10) * .04; ctx.save(); ctx.translate(W / 2, curM.boss ? 172 : 104); ctx.scale(sc, sc); plate(-82, -18, 164, 36, 18); ctx.fillStyle = mult > 1 ? "#ff8a1c" : "#e8452e"; ctx.fill(); ctx.strokeStyle = "#fff"; ctx.lineWidth = 2.5; ctx.stroke(); txt(`SERIE ${combo}${mult > 1 ? "  ·  x" + mult : ""}`, 0, 1, 22, "center"); plate(-70, 24, 140, 9, 4); ctx.fillStyle = "rgba(0,0,0,.55)"; ctx.fill(); plate(-70, 24, Math.max(6, 140 * Math.min(1, (combo - (nukeNext - NSTEP())) / NSTEP())), 9, 4); ctx.fillStyle = "#ff5a3a"; ctx.fill(); txt("☢ " + nukeNext, 0, 46, 15, "center", "#ffb08a"); ctx.restore(); }
   // Munition
   const sp = Math.min(20, 300 / MAG), bw = Math.min(11, sp - 2);
   plate(12, H - 96, MAG * sp + 22, 50, 14); ctx.fillStyle = "rgba(14,22,40,.62)"; ctx.fill();
@@ -1680,8 +1762,8 @@ const BLOB = { hot: spriteBlob("255,244,190"), or: spriteBlob("255,138,34"), sm:
 let slowT = 0, realDt = 0;
 const clamp01 = v => Math.max(0, Math.min(1, v));
 function detonate() {
-  if (state !== "play" || nukes <= 0) return;
-  nukes--; run.nukes++; shake = 40; slowT = 1.4;
+  if (state !== "play" || nukes <= 0 || paused) return;
+  nukes--; run.nukes++; shake = 40; slowT = 1.4; buzz([150, 40, 80, 40, 220]);
   const R = rng((Math.random() * 1e9) | 0), cx = W / 2, gy = H * .8, puffs = [];
   for (let i = 0; i < 46; i++) { const u = i / 45; puffs.push({ k: "stalk", u, ox: (R() - .5) * 28 * (1 - u * .4), r: 20 + R() * 26, d: u * .5 + R() * .1, ph: R() * 6 }); }
   for (let i = 0; i < 96; i++) puffs.push({ k: "cap", a: R() * Math.PI * 2, rad: 70 + R() * 170, r: 34 + R() * 46, d: .28 + R() * .3, sp: (R() < .5 ? -1 : 1) * (1.1 + R() * 1.4), ph: R() * 6 });
@@ -1764,11 +1846,11 @@ function ensureDaily() {
 }
 function renderProfile() {
   const i = levelInfo(save.xp); ensureDaily(); const open = save.daily.list.filter(m => !m.done).length;
-  $("locbtn").textContent = "📍 " + LOCS[save.loc].name;
+  $("locname").textContent = LOCS[save.loc].name;
   $("profile").innerHTML = `<div class="pf"><b>Rang ${i.l}</b> <span>${rankName(i.l)}</span><em>🔥 ${save.streak.n || 0} · 🪙 ${save.coins}</em></div><div class="bar"><i style="width:${i.cur / i.need * 100}%"></i></div>`;
   $("missdot").textContent = open ? ` (${open})` : " ✔"; $("chestn").textContent = save.chests; $("chestbtn").style.display = "";
 }
-const OVS = ["start", "end", "shop", "info", "missions", "ach", "daily", "cases", "contents", "places"]; let ovFrom = "start";
+const OVS = ["start", "end", "shop", "info", "missions", "ach", "daily", "cases", "contents", "places", "pause", "settings", "stats", "dex", "perks", "revive"]; let ovFrom = "start";
 function openOv(id, from) { if (from) ovFrom = from; OVS.forEach(x => $(x).classList.add("off")); $(id).classList.remove("off"); }
 function renderMissions() {
   ensureDaily(); const box = $("mlist"); box.innerHTML = "";
@@ -1825,7 +1907,7 @@ const cardHTML = it => `<div class="rc" style="--rc:${RAR_COL[it.rar]}"><img alt
 let caseSel = "feder", spinning = false, reelWin = -1;
 const canOpen = cs => cs === "feder" ? save.chests > 0 : save.coins >= CASES[cs].cost;
 function renderCases() {
-  syncCases();
+  syncCases(); updateAdBtn();
   const tabs = $("ctabs"); tabs.innerHTML = "";
   for (const cs of Object.keys(CASES)) { const C = CASES[cs], b = document.createElement("button"); b.className = "ctab" + (cs === caseSel ? " sel" : ""); b.innerHTML = `<span>${C.ic}</span><b>${C.name}</b><small>${cs === "feder" ? "x" + save.chests + " frei" : C.cost + " 🪙"}</small>`; b.onclick = () => { if (spinning) return; caseSel = cs; renderCases(); }; tabs.appendChild(b); }
   $("cbal").textContent = `🪙 ${save.coins}  ·  Skins ${save.skins.length}/${Object.keys(SKINS_W).length}`;
@@ -1891,6 +1973,20 @@ function renderPlaces() {
   let i = 0; const step = () => { if (i >= queue.length) return; const [img, id] = queue[i++]; img.src = thumb(id); setTimeout(step, 0); }; step();
 }
 const WIRE = () => {
+  $("dexbtn").onclick = () => { renderDex(); openOv("dex", "start"); }; $("dex-back").onclick = () => openOv("start");
+  $("perkbtn").onclick = () => { renderPerks(); openOv("perks", "start"); }; $("perks-back").onclick = () => openOv("start");
+  $("perk-reset").onclick = () => { save.perks = {}; persist(); renderPerks(); toast("Perks zurückgesetzt"); };
+  $("ad2x").onclick = () => { $("ad2x").disabled = true; AdBridge.show("double").then(ok => { if (ok) { save.coins += lastCoins; persist(); refreshMenu(); renderProfile(); toast("+" + lastCoins + " Münzen"); $("ad2x").style.display = "none"; } else $("ad2x").disabled = false; }); };
+  $("sharebtn").onclick = shareScore;
+  $("c-ad").onclick = () => { const d = today(); if (!save.adc || save.adc.date !== d) save.adc = { date: d, n: 0 }; if (save.adc.n >= 3) { toast("Heute keine Gratis-Kisten mehr"); return; } AdBridge.show("chest").then(ok => { if (ok) { save.adc.n++; save.chests++; persist(); renderCases(); toast("+1 Federbox"); } }); };
+  $("rv-yes").onclick = () => { AdBridge.show("revive").then(ok => { if (ok) { revived = true; lives = 1; endDelay = 0; paused = false; combo = 0; eggs = []; OVS.forEach(o => $(o).classList.add("off")); banner = { txt: "WEITER GEHT'S!", life: 1.4 }; sfx("levelup"); } }); };
+  $("rv-no").onclick = () => { paused = false; OVS.forEach(o => $(o).classList.add("off")); finish(); };
+  $("setbtn").onclick = () => { renderSettings(); openOv("settings", "start"); }; $("settings-back").onclick = () => openOv(ovFrom);
+  $("profbtn").onclick = () => { renderStats(); openOv("stats", "start"); }; $("stats-back").onclick = () => openOv("start");
+  $("pausebtn").onclick = pauseGame; $("p-resume").onclick = resumeGame; $("p-settings").onclick = () => { renderSettings(); openOv("settings", "pause"); }; $("p-quit").onclick = () => { resumeGame(); finish(); };
+  $("s-sfx").oninput = e => { save.set.sfx = +e.target.value; if (MASTER) MASTER.gain.value = save.set.sfx; persist(); }; $("s-sfx").onchange = () => sfx("hit");
+  $("s-mus").oninput = e => { save.set.music = +e.target.value; if (MUSG) MUSG.gain.value = save.set.music * .5; persist(); };
+  $("s-tut").onclick = () => { save.tut = {}; persist(); toast("Das Tutorial startet in der nächsten Runde."); };
   $("locbtn").onclick = () => { renderPlaces(); openOv("places", "start"); }; $("places-back").onclick = () => openOv("start");
   $("nuke").addEventListener("pointerdown", e => { e.stopPropagation(); e.preventDefault(); detonate(); });
   $("missbtn").onclick = () => { renderMissions(); openOv("missions", "start"); };
@@ -1901,14 +1997,160 @@ const WIRE = () => {
   $("c-open").onclick = openCase; $("c-contents").onclick = () => { renderContents(); openOv("contents"); }; $("contents-back").onclick = () => openOv("cases");
 };
 
+// ---------- Core B ----------
+// ---------- Core B: Werbung, Teilen, Dex, Perks, Tutorial, Wetter, Challenge ----------
+const hashStr = s => { let h = 0; for (const ch of s) h = (h * 31 + ch.charCodeAt(0)) | 0; return Math.abs(h); };
+let SRNG = null; const SR = () => SRNG ? SRNG() : Math.random(); const srnd = (a, b) => a + SR() * (b - a);
+const chLoc = () => { const u = LOC_ORDER_E.filter(locUnlocked); return u[hashStr(today()) % u.length]; };
+const runLoc = () => (MODES[mode] && MODES[mode].challenge) ? chLoc() : save.loc;
+const chGoal = () => Math.round(350 * LOCS[chLoc()].tier / 10) * 10;
+let chExtra = false, revived = false, maxLives = 3, lastCoins = 0, eventT = 25, goldQ = 0, goldT = 0;
+
+// Werbung (Platzhalter: hier später AdMob einhängen)
+const AdBridge = { show(reason) { return new Promise(res => adSimOpen(reason, res)); } };
+let adIv = null;
+function adSimOpen(reason, res) {
+  const T = { double: "Münzen verdoppeln", revive: "Weiterspielen", chest: "Gratis-Federbox", challenge: "Extra-Versuch" };
+  $("adov-t").textContent = T[reason] || "Belohnung"; $("adov-n").textContent = "3"; $("adov").classList.remove("off"); let n = 3;
+  const close = ok => { clearInterval(adIv); $("adov").classList.add("off"); res(ok); };
+  $("adov-x").onclick = () => close(false);
+  clearInterval(adIv); adIv = setInterval(() => { n--; $("adov-n").textContent = String(Math.max(0, n)); if (n <= 0) close(true); }, 1000);
+}
+function updateAdBtn() { const a = save.adc && save.adc.date === today() ? save.adc.n : 0, b = $("c-ad"); b.style.display = caseSel === "feder" ? "" : "none"; b.textContent = `📺 Gratis Federbox (${3 - a} heute)`; b.disabled = a >= 3 || spinning; }
+function askRevive() { paused = true; endDelay = 0; openOv("revive"); }
+function shareScore() {
+  const txt = `Federjagd: ${score} Punkte in ${LOCS[runLoc()].name} (${curM.name})! Schaffst du mehr?`;
+  if (navigator.share) navigator.share({ text: txt }).catch(() => {}); else { try { navigator.clipboard.writeText(txt).then(() => toast("Text kopiert!")).catch(() => toast(txt)); } catch (e) { toast(txt); } }
+}
+
+// Vogeldex
+const DEX = [["hen", "Huhn / Taube"], ["chick", "Küken / Spatz"], ["rooster", "Hahn / Fette Taube"], ["gold", "Goldvogel"], ["clock", "Zeit-Vogel"], ["gift", "Geschenk-Vogel"], ["crow", "Rabe"], ["boss", "Boss"]];
+const DEX_MS = [10, 50, 200, 500], DEX_RW = [50, 150, 400, 1000];
+function renderDex() {
+  const box = $("dexlist"); box.innerHTML = ""; const real = ctx;
+  for (const [sp, name] of DEX) {
+    const n = save.dex[sp] || 0, k = DEX_MS.filter(m => n >= m).length, next = DEX_MS[k], d = document.createElement("div"); d.className = "dexc" + (n ? "" : " unk");
+    const c = document.createElement("canvas"); c.width = 144; c.height = 120; const lc = c.getContext("2d"); lc.scale(2, 2); ctx = lc;
+    if (sp !== "boss") drawChicken({ sp, x: 34, y: 34, s: sp === "chick" ? 1.3 : .5, dir: 1, ph: .6, dead: false, rot: 0, gold: sp === "gold", hp: 1, maxhp: 1, flash: 0 }); else { lc.fillStyle = "#ffcf3a"; lc.font = "30px sans-serif"; lc.textAlign = "center"; lc.fillText("👑", 36, 22); drawChicken({ sp: "rooster", x: 34, y: 40, s: .42, dir: 1, ph: .6, dead: false, rot: 0, hp: 1, maxhp: 1, flash: 0 }); }
+    if (!n) { lc.globalCompositeOperation = "source-atop"; lc.fillStyle = "rgba(10,14,26,.88)"; lc.fillRect(0, 0, 72, 60); }
+    ctx = real; d.appendChild(c); d.insertAdjacentHTML("beforeend", `<b>${n ? name : "???"}</b><small>${n} erlegt${next ? " · nächstes Ziel " + next : " · ★ komplett"}</small><div class="bar"><i style="width:${next ? Math.min(100, n / next * 100) : 100}%"></i></div>`); box.appendChild(d);
+  }
+}
+
+// Perks
+const PERKS = [
+  { id: "bounty", n: "Kopfgeld", d: "+8 % Münzen pro Stufe", max: 5 }, { id: "fever", n: "Fieberfieber", d: "Fieber lädt 12 % schneller pro Stufe", max: 5 },
+  { id: "reload", n: "Schnelle Finger", d: "Nachladen 6 % schneller pro Stufe", max: 5 }, { id: "heart", n: "Dickes Fell", d: "+1 Herz in Herz-Modi pro Stufe", max: 2 },
+  { id: "pu", n: "Langer Atem", d: "Power-ups 12 % länger pro Stufe", max: 5 }, { id: "nuke", n: "Atomkraft", d: "Nuke 2 Treffer früher pro Stufe", max: 3 },
+  { id: "eye", n: "Scharfes Auge", d: "Trefferzone +4 % pro Stufe", max: 5 },
+];
+function pk(id) { return (curM && curM.challenge) ? 0 : (save.perks[id] || 0); }
+const perkPoints = () => levelInfo(save.xp).l - 1 - Object.values(save.perks).reduce((a, b) => a + b, 0);
+const NSTEP = () => 30 - 2 * pk("nuke");
+function renderPerks() {
+  const box = $("perklist"); box.innerHTML = ""; $("perkpts").textContent = `Freie Punkte: ${perkPoints()} (1 pro Rang)`;
+  for (const P of PERKS) { const lv = save.perks[P.id] || 0, d = document.createElement("div"); d.className = "mis" + (lv >= P.max ? " done" : ""); d.innerHTML = `<div><b>${P.n} · Stufe ${lv}/${P.max}</b><small>${P.d}</small></div>`; const b = document.createElement("button"); b.className = "sm"; b.textContent = lv >= P.max ? "MAX" : "+1"; b.disabled = lv >= P.max || perkPoints() < 1; b.onclick = () => { save.perks[P.id] = lv + 1; persist(); renderPerks(); sfx("gold"); }; d.appendChild(b); const br = document.createElement("div"); br.className = "bar"; br.innerHTML = `<i style="width:${lv / P.max * 100}%"></i>`; d.appendChild(br); box.appendChild(d); }
+}
+
+// Tutorial
+let tip = { txt: "", life: 0 };
+function showTip(k, txt, life = 4.5) { if (save.tut[k]) return; save.tut[k] = 1; persist(); tip = { txt, life }; }
+function tutorialTick(dt) {
+  tip.life -= dt; if (curM.challenge) return; const el = ROUND - timeLeft;
+  if (!save.tut.a) { if (hits > 0) { save.tut.a = 1; persist(); tip.life = 0; } else if (el > .8 && tip.life <= 0) tip = { txt: save.set.ctrl === "aim" && !0 ? "Finger ziehen, loslassen = Schuss!" : "Tippe auf die Vögel!", life: 6 }; return; }
+  if (hits > 0 && !save.tut.b) showTip("b", "Treffer in Folge füllen die FIEBER-Leiste!");
+  else if (ammo <= 1 && reloadT <= 0 && !save.tut.c && !curM.sniper) showTip("c", "Fast leer: unten rechts NACHLADEN tippen", 5.5);
+  else if (!save.tut.d && chickens.some(c => c.sp === "crow" && !c.dead && c.x > 20 && c.x < W - 20)) showTip("d", "Achtung Rabe! Besser nicht treffen.");
+  else if (!save.tut.e && chickens.some(c => (c.sp === "gold" || c.sp === "gift") && c.x > 20 && c.x < W - 20)) showTip("e", "Goldene und rosa Vögel bringen extra Punkte und Power-ups!", 5.5);
+}
+function drawTip() { if (tip.life <= 0 || state !== "play") return; ctx.save(); ctx.globalAlpha = Math.min(1, tip.life * 2); plate(W / 2 - 215, 600, 430, 50, 25); ctx.fillStyle = "rgba(14,22,40,.88)"; ctx.fill(); ctx.strokeStyle = "#ffcf3a"; ctx.lineWidth = 3; ctx.stroke(); txt(tip.txt, W / 2, 626, 21, "center", "#fff7e0"); ctx.restore(); }
+
+// Wetter
+const WEATHER = { zermatt: "snow", geiranger: "snow", london: "rain", montsaint: "fog", hallstatt: "fog", rheinfall: "mist", venedig: "mist" };
+const WPT = Array.from({ length: 110 }, (_, i) => ({ a: (i * 73 % 100) / 100, b: (i * 41 % 100) / 100, s: .6 + (i * 29 % 10) / 10 }));
+function drawWeather() {
+  const w = WEATHER[BGLOC]; if (!w || save.set.gfx === "low") return; ctx.save();
+  if (w === "snow") { ctx.fillStyle = "rgba(255,255,255,.85)"; for (const p of WPT) { const x = (((p.a * W + t * 20 * p.s + Math.sin(t * 1.3 + p.b * 9) * 14) % W) + W) % W, y = (p.b * H + t * 55 * p.s) % H; ctx.beginPath(); ctx.arc(x, y, 1.6 + p.s * 1.6, 0, 7); ctx.fill(); } }
+  else if (w === "rain") { ctx.fillStyle = "rgba(60,80,110,.14)"; ctx.fillRect(0, 0, W, H); ctx.strokeStyle = "rgba(200,220,255,.5)"; ctx.lineWidth = 1.4; for (const p of WPT) { const x = (((p.a * W - t * 60 * p.s) % W) + W) % W, y = (p.b * H + t * 520 * p.s) % H; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 5, y + 16); ctx.stroke(); } }
+  else { const a = w === "fog" ? .5 : .28; for (let k = 0; k < 3; k++) { const x = ((t * (8 + k * 5) + k * 260) % (W + 500)) - 250, y = 560 + k * 90, g = ctx.createRadialGradient(x, y, 10, x, y, 300); g.addColorStop(0, `rgba(235,240,245,${a})`); g.addColorStop(1, "rgba(235,240,245,0)"); ctx.fillStyle = g; ctx.fillRect(x - 300, y - 150, 600, 300); } }
+  ctx.restore();
+}
+function tryStart() {
+  if (MODES[mode].challenge && save.ch.date === today() && save.ch.tries >= 1 && !chExtra) { AdBridge.show("challenge").then(ok => { if (ok) { chExtra = true; start(); } }); return; }
+  start();
+}
+
+// ---------- Core A ----------
+// ---------- Einstellungen, Musik, Haptik, Pause, Profil ----------
+function buzz(p) { if (save.set.haptic && navigator.vibrate) { try { navigator.vibrate(p); } catch (e) {} } }
+function applyGfx() {
+  const m = { high: 2, mid: 1.5, low: 1 }[save.set.gfx] || 2; DPR = Math.min(m, window.devicePixelRatio || 1);
+  cv.width = W * DPR; cv.height = H * DPR; for (const k in thumbs) delete thumbs[k]; buildBackground(BGLOC || save.loc); buildVig();
+}
+// Musik
+let MUSG = null, musTimer = null, musNext = 0, musStep = 0, ambT = 2;
+const NOTE = m => 440 * Math.pow(2, (m - 69) / 12);
+const MUSIC = {
+  menu:  { bpm: 82,  roots: [57, 53, 48, 55], chords: [[0, 3, 7], [0, 4, 7], [0, 4, 7], [0, 4, 7]], arp: [0, 1, 2, 1, 0, 1, 2, 1], wave: "triangle", drums: 0, sw: 0 },
+  rural: { bpm: 114, roots: [55, 50, 52, 48], chords: [[0, 4, 7], [0, 4, 7], [0, 3, 7], [0, 4, 7]], arp: [0, 2, 1, 2, 0, 2, 1, 2], wave: "square", drums: 1, sw: .03 },
+  city:  { bpm: 118, roots: [50, 46, 53, 48], chords: [[0, 3, 7], [0, 4, 7], [0, 4, 7], [0, 4, 7]], arp: [0, 1, 2, 3, 2, 1, 2, 1], wave: "triangle", drums: 1, sw: .08 },
+  boss:  { bpm: 142, roots: [52, 48, 50, 47], chords: [[0, 3, 7], [0, 4, 7], [0, 4, 7], [0, 4, 7]], arp: [0, 3, 1, 3, 2, 3, 1, 3], wave: "sawtooth", drums: 2, sw: 0, bass8: true },
+};
+function moodNow() { if (state === "play" && !paused) return curM.boss ? "boss" : (birdTheme === "pigeon" ? "city" : "rural"); return "menu"; }
+function playStep(step, t0, M) {
+  const bar = (step >> 4) & 3, s = step & 15, root = M.roots[bar], ch = M.chords[bar], out = MUSG, fv = feverT > 0 && state === "play";
+  if (M.bass8 ? s % 2 === 0 : s % 4 === 0) { const bn = root - 12 + (M.bass8 && s % 8 === 6 ? 7 : 0); tone(t0, .22, { type: "triangle", f0: NOTE(bn), f1: NOTE(bn) * .99, g: .24, wet: 0, out }); }
+  if (s % 2 === 0) { const idx = M.arp[(s >> 1) % M.arp.length], note = root + 12 + ch[idx % 3] + (idx >= 3 ? 12 : 0) + (fv ? 12 : 0), saw = M.wave === "sawtooth"; tone(t0, saw ? .1 : .17, { type: M.wave, f0: NOTE(note), f1: NOTE(note) * .985, g: saw ? .05 : .08, wet: 0, out }); }
+  if (M.drums || fv) {
+    if (s === 0 || s === 8 || (M.drums === 2 && s === 10)) tone(t0, .13, { f0: 150, f1: 45, g: .55, wet: 0, out });
+    if (s === 4 || s === 12) nz(t0, .12, { type: "bandpass", f0: 1800, f1: 900, q: .8, g: .24, wet: 0, out });
+    if (M.drums === 2 || fv || s % 2 === 0) nz(t0, .03, { type: "highpass", f0: 7000, f1: 4000, g: .06, wet: 0, out });
+  }
+}
+function musicTick() {
+  if (!AC || !MUSG || AC.state !== "running") return;
+  const M = MUSIC[moodNow()], base = 60 / M.bpm / 4; if (musNext < AC.currentTime) musNext = AC.currentTime + .05;
+  while (musNext < AC.currentTime + .3) { playStep(musStep, musNext, M); musNext += base * (musStep % 2 ? 1 - M.sw : 1 + M.sw); musStep++; }
+  ambT -= .09; if (ambT <= 0 && !paused) { ambT = 2.2 + Math.random() * 4.5; const t0 = AC.currentTime + .02; if (birdTheme !== "pigeon") { tone(t0, .09, { f0: 2600, f1: 3900, g: .03, wet: .3 }); tone(t0 + .12, .08, { f0: 3300, f1: 2500, g: .024, wet: .3 }); if (Math.random() < .5) tone(t0 + .24, .07, { f0: 3000, f1: 4100, g: .02, wet: .3 }); } else { tone(t0, .26, { f0: 350, f1: 300, g: .03, wet: .5 }); tone(t0 + .3, .2, { f0: 340, f1: 290, g: .024, wet: .5 }); } }
+}
+function musicBoot() {
+  audioInit(); if (!MUSG) { MUSG = AC.createGain(); MUSG.gain.value = save.set.music * .5; MUSG.connect(COMP); }
+  if (!musTimer) musTimer = setInterval(musicTick, 90);
+}
+addEventListener("pointerdown", () => { try { musicBoot(); } catch (e) {} }, { capture: true });
+// Pause
+let paused = false, aimDown = false;
+function pauseGame() { if (state !== "play" || paused) return; paused = true; holding = false; aimDown = false; if (MUSG) MUSG.gain.value = save.set.music * .15; openOv("pause"); }
+function resumeGame() { paused = false; if (MUSG) MUSG.gain.value = save.set.music * .5; OVS.forEach(o => $(o).classList.add("off")); }
+document.addEventListener("visibilitychange", () => { if (document.hidden) { pauseGame(); try { if (AC && AC.state === "running") AC.suspend(); } catch (e) {} } else { try { if (AC) AC.resume(); } catch (e) {} } });
+addEventListener("blur", () => pauseGame());
+// Einstellungen
+function renderSettings() {
+  $("s-sfx").value = save.set.sfx; $("s-mus").value = save.set.music;
+  const seg = (id, opts, key) => { const box = $(id); box.innerHTML = ""; for (const [v, lab] of opts) { const b = document.createElement("button"); b.className = "segb" + (save.set[key] === v ? " on" : ""); b.textContent = lab; b.onclick = () => { save.set[key] = v; persist(); if (key === "gfx") applyGfx(); if (key === "haptic" && v) buzz(30); renderSettings(); }; box.appendChild(b); } };
+  seg("s-haptic", [[true, "An"], [false, "Aus"]], "haptic"); seg("s-ctrl", [["direct", "Direkt"], ["aim", "Zielen"]], "ctrl"); seg("s-gfx", [["high", "Hoch"], ["mid", "Mittel"], ["low", "Niedrig"]], "gfx");
+  $("s-ctrl-d").textContent = save.set.ctrl === "aim" ? "Finger ziehen, Fadenkreuz schwebt darüber, Loslassen schiesst." : "Tippen schiesst genau dorthin, wo du tippst.";
+}
+// Profil
+function renderStats() {
+  const s = save.stats, i = levelInfo(save.xp), stars = Object.values(save.lstars).reduce((a, b) => a + b, 0), box = $("statlist"); box.innerHTML = "";
+  const rows = [["Rang", `${i.l} · ${rankName(i.l)}`], ["Erfahrung", `${save.xp} XP`], ["Münzen", save.coins], ["Runden gespielt", s.rounds], ["Treffer", s.hits], ["Goldvögel", s.gold], ["Bosse besiegt", s.boss], ["Beste Serie", s.bestCombo], ["Beste Punktzahl", s.bestScore], ["Fieber-Phasen", s.fever], ["Nukes gezündet", s.nukes], ["Kisten geöffnet", s.cases || 0], ["Sterne", `${stars} von ${LOC_ORDER_E.length * 3}`], ["Orte gespielt", `${Object.keys(save.visited).length} von ${LOC_ORDER_E.length}`], ["Waffen-Skins", `${save.skins.length} von ${Object.keys(SKINS_W).length}`], ["Erfolge", `${Object.keys(save.ach).length} von ${ACH.length}`]];
+  for (const [k, v] of rows) box.insertAdjacentHTML("beforeend", `<div class="mis"><div><b>${k}</b></div><span>${v}</span></div>`);
+  for (const id of MODE_ORDER) box.insertAdjacentHTML("beforeend", `<div class="mis"><div><b>Rekord ${MODES[id].name}</b></div><span>${bestOf(id)}</span></div>`);
+}
+let toastT = 0;
+function toast(msg) { const el = $("toast"); el.textContent = msg; el.className = "on"; clearTimeout(toastT); toastT = setTimeout(() => el.className = "", 2400); }
+let perfN = 0, perfS = 0;
+
 // ---------- Eingabe ----------
 function pos(e) { const r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) * W / r.width, y: (e.clientY - r.top) * H / r.height }; }
-cv.addEventListener("pointermove", e => { mouse = pos(e); });
-cv.addEventListener("pointerdown", e => { e.preventDefault(); mouse = pos(e); if (state === "play") { holding = true; shoot(mouse.x, mouse.y); } });
-addEventListener("pointerup", () => { holding = false; }); addEventListener("pointercancel", () => { holding = false; });
-addEventListener("keydown", e => { if (e.code === "KeyN") detonate(); if (e.code === "KeyR") reload(); if (e.code === "Space" && state === "play") shoot(mouse.x, mouse.y); });
+const aimOff = (p, e) => (save.set.ctrl === "aim" && e.pointerType !== "mouse") ? { x: p.x, y: Math.max(26, p.y - 76) } : p;
+cv.addEventListener("pointermove", e => { mouse = aimOff(pos(e), e); });
+cv.addEventListener("pointerdown", e => { e.preventDefault(); mouse = aimOff(pos(e), e); if (state !== "play" || paused) return; if (save.set.ctrl === "aim" && e.pointerType !== "mouse") { aimDown = true; if (curW.auto) holding = true; } else { holding = true; shoot(mouse.x, mouse.y); } });
+addEventListener("pointerup", () => { if (aimDown && state === "play" && !paused && !curW.auto) shoot(mouse.x, mouse.y); aimDown = false; holding = false; }); addEventListener("pointercancel", () => { aimDown = false; holding = false; });
+addEventListener("keydown", e => { if (e.code === "Escape" || e.code === "KeyP") { paused ? resumeGame() : pauseGame(); return; } if (e.code === "KeyN") detonate(); if (e.code === "KeyR") reload(); if (e.code === "Space" && state === "play") shoot(mouse.x, mouse.y); });
 $("reload").addEventListener("pointerdown", e => { e.stopPropagation(); reload(); });
-$("go").onclick = start; $("again").onclick = start;
+$("go").onclick = tryStart; $("again").onclick = tryStart;
 $("menubtn").onclick = () => { openOv("start"); renderModes(); refreshMenu(); renderProfile(); };
 $("infobtn").onclick = () => { renderLegend(); $("start").classList.add("off"); $("info").classList.remove("off"); };
 $("info-back").onclick = () => { $("info").classList.add("off"); $("start").classList.remove("off"); };
@@ -1967,7 +2209,10 @@ let last = performance.now(), menuT = 0;
 function frame(now) {
   const dt = Math.min(.033, (now - last) / 1000), ts0 = slowT > 0 ? .1 + .9 * Math.pow(1 - slowT / 1.4, 2) : 1; last = now; realDt = dt; slowT = Math.max(0, slowT - dt);
   if (state !== "play") { menuT -= dt; if (menuT <= 0 && chickens.length < 9) { spawn("hen"); menuT = .8; } }
-  update(dt * ts0); draw(); requestAnimationFrame(frame);
+  if (!paused) update(dt * ts0);
+  draw();
+  if (state === "play" && !paused) { perfN++; perfS += dt; if (perfN >= 150) { if (perfS / perfN > .0275 && save.set.gfx !== "low") { save.set.gfx = save.set.gfx === "high" ? "mid" : "low"; persist(); applyGfx(); toast("Grafik automatisch reduziert"); } perfN = 0; perfS = 0; } } else { perfN = 0; perfS = 0; }
+  requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
 checkDaily();
